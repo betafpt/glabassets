@@ -1,0 +1,106 @@
+/* Utility Classes */
+
+.absolute-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-col {
+    flex-direction: column;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.gap-2 {
+    gap: 8px;
+}
+
+.gap-3 {
+    gap: 12px;
+}
+
+.gap-4 {
+    gap: 16px;
+}
+
+.p-4 {
+    padding: 16px;
+}
+
+.p-6 {
+    padding: 24px;
+}
+
+.mt-2 {
+    margin-top: 8px;
+}
+
+.mt-4 {
+    margin-top: 16px;
+}
+
+.mb-2 {
+    margin-bottom: 8px;
+}
+
+.mb-4 {
+    margin-bottom: 16px;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.h-full {
+    height: 100%;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* Grid for Assets */
+.asset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 24px;
+}
+
+/* App TitleBar (Header) */
+.titlebar {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--br-card);
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    -webkit-app-region: drag;
+}
+
+.titlebar-actions {
+    -webkit-app-region: no-drag;
+    display: flex;
+    gap: 8px;
+}
