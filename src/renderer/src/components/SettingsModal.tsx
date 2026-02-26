@@ -113,8 +113,9 @@ export function SettingsModal({ isOpen, onClose, onAdminChange }: SettingsModalP
 
                 <div className="p-4 border-t flex-col gap-4" style={{ borderColor: 'var(--br-card)', background: 'rgba(0,0,0,0.1)' }}>
                     <div className="flex justify-between items-center w-full">
-                        <span className="text-muted" style={{ fontSize: '12px' }}>v1.0.0-beta</span>
+                        <span className="text-muted" style={{ fontSize: '12px' }}>v1.0.0</span>
                         <div className="flex gap-2">
+                            <button className="btn btn-primary" onClick={() => window.api?.checkForUpdates?.()} style={{ fontSize: '12px', padding: '6px 12px' }}>Check for Updates</button>
                             <button className="btn btn-ghost" onClick={onClose}>Close</button>
                         </div>
                     </div>

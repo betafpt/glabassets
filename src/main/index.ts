@@ -179,3 +179,7 @@ app.on('window-all-closed', () => {
 ipcMain.handle('quit-and-install', () => {
   autoUpdater.quitAndInstall()
 })
+
+ipcMain.handle('check-for-updates', () => {
+  autoUpdater.checkForUpdatesAndNotify()
+})

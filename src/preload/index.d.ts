@@ -7,6 +7,7 @@ declare global {
       downloadAsset: (url: string, filename: string) => Promise<string>,
       getDeviceId: () => Promise<string>,
       quitAndInstall: () => Promise<void>,
+      checkForUpdates: () => Promise<void>,
       onUpdaterMessage: (callback: (data: any) => void) => () => void
     }
   }
