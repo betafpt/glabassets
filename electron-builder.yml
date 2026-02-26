@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: resolve-asset-manager
+appId: com.glab.assets
+productName: "G.Lab Assets"
 directories:
   buildResources: build
 files:
@@ -25,9 +25,10 @@ mac:
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  notarize: false
+  target: dmg
+  identity: null
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${name}-${version}-mac.${ext}
 linux:
   target:
     - AppImage
@@ -39,5 +40,6 @@ appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  provider: github
+  owner: betafpt
+  repo: glabassets

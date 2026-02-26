@@ -1,23 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Goldman:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
 
 :root {
   /* Premium Dark Theme Colors */
-  --bg-app: #0f1115;
-  --bg-sidebar: rgba(18, 20, 24, 0.7);
-  --bg-card: rgba(26, 29, 36, 0.6);
-  --bg-card-hover: rgba(36, 40, 50, 0.8);
+  --bg-app: #09090b;
+  /* Thâm mờ xám tối */
+  --bg-sidebar: rgba(18, 18, 20, 0.4);
+  --bg-card: rgba(24, 24, 27, 0.5);
+  --bg-card-hover: rgba(39, 39, 42, 0.6);
 
-  --br-card: rgba(255, 255, 255, 0.05);
-  --br-card-hover: rgba(255, 255, 255, 0.1);
+  --br-card: rgba(255, 255, 255, 0.08);
+  --br-card-hover: rgba(255, 255, 255, 0.15);
 
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
+  /* Vibrant Accent */
+  --primary: #22c55e;
+  /* Neon Green */
+  --primary-hover: #16a34a;
+  --secondary: #84cc16;
+  /* Lime Green */
 
   --text-main: #f8fafc;
-  --text-muted: #94a3b8;
+  --text-muted: #a1a1aa;
 
   --danger: #ef4444;
-  --success: #22c55e;
+  --success: #10b981;
 }
 
 * {
@@ -32,14 +37,23 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: 'Goldman', sans-serif;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--bg-app);
+
+  /* Mesh Gradient Background */
+  background-image:
+    radial-gradient(circle at 15% 50%, rgba(34, 197, 94, 0.15), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(132, 204, 22, 0.15), transparent 25%),
+    radial-gradient(circle at 50% 100%, rgba(56, 189, 248, 0.1), transparent 30%);
+  background-attachment: fixed;
+  background-size: cover;
+
   color: var(--text-main);
   /* Electron drag region so users can drag the window */
   -webkit-app-region: drag;
@@ -54,6 +68,9 @@ body {
   display: flex;
   width: 100%;
   height: 100%;
+  padding: 12px;
+  /* Pad entire app */
+  box-sizing: border-box;
 }
 
 /* Make interactable elements non-draggable */

@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react'
-import { Folder, Film, FileType2, Settings, DownloadCloud, Upload, Info, FileVideo, Trash2, Edit } from 'lucide-react'
+import { Folder, Film, FileType2, Settings, DownloadCloud, Upload, Info, FileVideo, Trash2, Edit, LayoutGrid, Maximize, RefreshCw, X } from 'lucide-react'
 import './styles/globals.css'
 import './styles/components.css'
 import './styles/utilities.css'
 import { SettingsModal } from './components/SettingsModal'
 import { AdminUploadModal } from './components/AdminUploadModal'
+import { ActivationModal } from './components/ActivationModal'
 import { supabase } from './lib/supabase'
 
 function App() {
   const [activeCategory, setActiveCategory] = useState('all')
+  const [viewMode, setViewMode] = useState<'grid' | 'full'>('grid')
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [editingAsset, setEditingAsset] = useState<any>(null)
@@ -17,10 +19,14 @@ function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [devError, setDevError] = useState<string | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isPremium, setIsPremium] = useState(false)
 
   // Download states
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [downloadProgress, setDownloadProgress] = useState(0)
+
+  // Auto Updater State
+  const [updateInfo, setUpdateInfo] = useState<{ type: string; progress?: number; info?: any; error?: string } | null>(null)
 
   useEffect(() => {
     setIsAdmin(localStorage.getItem('resolve_is_admin') === 'true')
@@ -36,6 +42,40 @@ function App() {
     return () => {
       window.electron.ipcRenderer.removeListener('download-progress', listener)
     }
+  }, [])
+
+  useEffect(() => {
+    // Setup Supabase Realtime Subscription for the 'assets' table
+    const channel = supabase.channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'assets'
+        },
+        (payload) => {
+          console.log('Realtime change received!', payload)
+          // When any insert, update, or delete happens, just fetch the fresh list
+          fetchAssets()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
+  useEffect(() => {
+    // Listen for Auto Updater Messages
+    if (window.api && window.api.onUpdaterMessage) {
+      const cleanup = window.api.onUpdaterMessage((data) => {
+        setUpdateInfo(data)
+      })
+      return cleanup
+    }
+    return undefined // added explicit return as per lint feedback
   }, [])
 
   async function fetchAssets() {
@@ -69,6 +109,11 @@ function App() {
   }
 
   const handleInstall = async (asset: any) => {
+    if (!isPremium && !isAdmin) {
+      alert("Bạn chưa kích hoạt bản quyền! Không thể tải xuống.")
+      return
+    }
+
     try {
       setDownloadingId(asset.id)
       setDownloadProgress(0)
@@ -79,9 +124,9 @@ function App() {
       const savedPath = await window.api.downloadAsset(asset.file_url, filename)
 
       // We can use a custom toast instead in the future, for now alert is enough to debug
-      alert(`🎉 Installed successfully at:\n${savedPath}`)
+      alert(`🎉 Installed successfully at: \n${savedPath}`)
     } catch (err: any) {
-      alert(`❌ Failed to install:\n${err.message || err}`)
+      alert(`❌ Failed to install: \n${err.message || err}`)
     } finally {
       setDownloadingId(null)
       setDownloadProgress(0)
@@ -89,7 +134,7 @@ function App() {
   }
 
   const handleDelete = async (asset: any) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn "${asset.title}" không?`)) return;
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn "${asset.title}" không ?`)) return;
     try {
       // 1. Delete from DB
       const { error: dbError } = await supabase.from('assets').delete().eq('id', asset.id);
@@ -131,14 +176,77 @@ function App() {
 
   return (
     <>
+      {!isPremium && !isAdmin && (
+        <ActivationModal
+          onActivate={() => setIsPremium(true)}
+          onAdminBypass={() => {
+            setIsAdmin(true)
+            setIsSettingsOpen(true)
+          }}
+        />
+      )}
+
+      {/* Update Toast Notifications */}
+      {updateInfo && (updateInfo.type === 'update-available' || updateInfo.type === 'download-progress' || updateInfo.type === 'update-downloaded') && (
+        <div style={{
+          position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999,
+          background: 'var(--bg-card)', border: '1px solid var(--primary)',
+          padding: '16px', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+          maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '8px',
+          animation: 'slideUp 0.3s ease-out'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: 600 }}>
+            <RefreshCw size={18} className={updateInfo.type === 'download-progress' ? "animate-spin" : ""} />
+            {updateInfo.type === 'update-available' && <span>Đã có phiên bản mới!</span>}
+            {updateInfo.type === 'download-progress' && <span>Đang tải bản cập nhật... {Math.round(updateInfo.progress || 0)}%</span>}
+            {updateInfo.type === 'update-downloaded' && <span>Sẵn sàng cập nhật</span>}
+          </div>
+
+          {updateInfo.type === 'update-available' && (
+            <p className="text-muted" style={{ fontSize: '12px' }}>Vui lòng đợi trong giây lát để tải dữ liệu nền...</p>
+          )}
+
+          {updateInfo.type === 'download-progress' && (
+            <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{ width: `${updateInfo.progress}%`, height: '100%', background: 'var(--primary)', transition: 'width 0.2s' }} />
+            </div>
+          )}
+
+          {updateInfo.type === 'update-downloaded' && (
+            <>
+              <p className="text-muted" style={{ fontSize: '12px' }}>Tải xuống hoàn tất. Khởi động lại ứng dụng ngay để áp dụng!</p>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  if (window.api && window.api.quitAndInstall) {
+                    window.api.quitAndInstall()
+                  }
+                }}
+                style={{ padding: '8px', fontSize: '13px', marginTop: '4px' }}
+              >
+                Cài đặt & Khởi động lại
+              </button>
+            </>
+          )}
+
+          <button
+            onClick={() => setUpdateInfo(null)}
+            style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: '#666', cursor: 'pointer' }}
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
       {/* Sidebar */}
       <aside className="sidebar">
-        <div className="titlebar" style={{ justifyContent: 'center', borderBottom: 'none' }}>
-          <h1 style={{ fontSize: '16px', fontWeight: 600, letterSpacing: '0.5px' }}>Resolve Assets</h1>
+        <div className="titlebar" style={{ height: 'auto', justifyContent: 'center', borderBottom: 'none', paddingTop: '32px', paddingBottom: '24px' }}>
+          <img src="./logo.png" className="app-main-logo" alt="App Logo" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling!.removeAttribute('style'); }} />
+          <h1 style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '0.5px', display: 'none', color: 'var(--primary)', textShadow: '0 0 10px rgba(34, 197, 94, 0.5)' }}>Resolve Assets</h1>
         </div>
 
-        <div className="flex-col gap-2 p-4 mt-2">
-          <p className="text-muted" style={{ fontSize: '12px', marginBottom: '8px', paddingLeft: '8px' }}>CATEGORIES</p>
+        <div className="flex-col gap-2 p-4 mt-2" style={{ overflowY: 'auto' }}>
+          <p className="text-muted" style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '1px', marginBottom: '8px', paddingLeft: '8px', textTransform: 'uppercase' }}>Categories</p>
           {categories.map(cat => (
             <button
               key={cat.id}
@@ -176,22 +284,37 @@ function App() {
 
       {/* Main Content */}
       <main className="main-content">
-        <header className="titlebar">
-          <div className="flex items-center gap-3">
-            <h2 style={{ fontSize: '15px', fontWeight: 500 }}>
+        <header className="titlebar" style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+          <div className="flex items-center gap-4">
+            <h2 style={{ fontSize: '18px', fontWeight: 500 }}>
               {categories.find(c => c.id === activeCategory)?.name}
             </h2>
-            <span style={{ fontSize: '12px', background: 'var(--bg-card)', padding: '2px 8px', borderRadius: '12px', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '12px', background: 'var(--primary)', color: 'white', padding: '2px 10px', borderRadius: '12px', fontWeight: 500, boxShadow: '0 0 10px rgba(34, 197, 94, 0.3)' }}>
               {isLoading ? '...' : (activeCategory === 'all' ? assets.length : assets.filter(a => a.category === activeCategory).length)} items
             </span>
           </div>
 
-          <div className="titlebar-actions">
-            {/* Window controls will be injected here by OS native frame if hidden, otherwise custom */}
+          <div className="titlebar-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center', marginRight: '16px' }}>
+            <button
+              className={`btn ${viewMode === 'grid' ? 'btn-primary' : 'btn-ghost'}`}
+              style={{ padding: '6px', borderRadius: '8px' }}
+              onClick={() => setViewMode('grid')}
+              title="Grid View"
+            >
+              <LayoutGrid size={16} />
+            </button>
+            <button
+              className={`btn ${viewMode === 'full' ? 'btn-primary' : 'btn-ghost'}`}
+              style={{ padding: '6px', borderRadius: '8px' }}
+              onClick={() => setViewMode('full')}
+              title="Full-screen View"
+            >
+              <Maximize size={16} />
+            </button>
           </div>
         </header>
 
-        <div className="asset-grid">
+        <div className={`asset-grid ${viewMode}`} style={{ padding: '24px' }}>
           {devError ? (
             <div className="p-6 w-full text-center" style={{ gridColumn: '1 / -1', background: 'rgba(239,68,68,0.1)', border: '1px solid var(--danger)', borderRadius: '8px' }}>
               <h3 style={{ color: 'var(--danger)', marginBottom: '8px' }}>Developer Debug Error:</h3>
@@ -215,12 +338,19 @@ function App() {
                   onClick={() => setSelectedAssetDetail(asset)}
                   style={{ cursor: 'pointer', position: 'relative' }}
                 >
-                  {/* Fallback pattern for thumbnail */}
-                  <div className="absolute-center w-full h-full flex items-center justify-center" style={{ background: '#1e2128' }}>
-                    {asset.category === 'transitions' ? <Film size={32} opacity={0.2} /> :
-                      asset.category === 'titles' ? <FileType2 size={32} opacity={0.2} /> :
-                        <DownloadCloud size={32} opacity={0.2} />}
-                  </div>
+                  {asset.thumbnail_url ? (
+                    <img
+                      src={asset.thumbnail_url}
+                      alt={asset.title}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div className="absolute-center w-full h-full flex items-center justify-center" style={{ background: '#1e2128' }}>
+                      {asset.category === 'transitions' ? <Film size={32} opacity={0.2} /> :
+                        asset.category === 'titles' ? <FileType2 size={32} opacity={0.2} /> :
+                          <DownloadCloud size={32} opacity={0.2} />}
+                    </div>
+                  )}
                   {/* Video block if url exists */}
                   {asset.video_preview_url && (
                     <video
@@ -295,7 +425,22 @@ function App() {
               {selectedAssetDetail.youtube_url ? (
                 <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', backgroundColor: '#000' }}>
                   <iframe
-                    src={selectedAssetDetail.youtube_url.replace('watch?v=', 'embed/')}
+                    src={(() => {
+                      try {
+                        const url = selectedAssetDetail.youtube_url;
+                        if (url.includes('embed/')) return url;
+                        const urlObj = new URL(url);
+                        let videoId = '';
+                        if (urlObj.hostname.includes('youtube.com')) {
+                          videoId = urlObj.searchParams.get('v') || '';
+                        } else if (urlObj.hostname.includes('youtu.be')) {
+                          videoId = urlObj.pathname.slice(1);
+                        }
+                        return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?origin=http://localhost` : url.replace('watch?v=', 'embed/');
+                      } catch (e) {
+                        return selectedAssetDetail.youtube_url.replace('watch?v=', 'embed/');
+                      }
+                    })()}
                     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
@@ -353,10 +498,10 @@ function App() {
               </div>
             </div>
           </div>
-        )}
+        )
+      }
     </>
   )
 }
 
 export default App
-

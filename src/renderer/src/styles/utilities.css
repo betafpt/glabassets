@@ -83,6 +83,18 @@
     padding: 24px;
 }
 
+.asset-grid.full {
+    grid-template-columns: 1fr;
+}
+
+.asset-grid.full .asset-thumbnail-container {
+    aspect-ratio: 21/9;
+}
+
+.asset-grid.full .asset-video {
+    object-fit: cover;
+}
+
 /* App TitleBar (Header) */
 .titlebar {
     height: 48px;

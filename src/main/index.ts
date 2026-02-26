@@ -2,6 +2,8 @@ import { app, shell, BrowserWindow, ipcMain, net } from 'electron'
 import { join } from 'path'
 import * as fs from 'fs'
 import * as os from 'os'
+import { machineIdSync } from 'node-machine-id'
+import { autoUpdater } from 'electron-updater'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 
@@ -10,6 +12,7 @@ function createWindow(): void {
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
+    title: 'G.Lab Assets',
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -53,6 +56,16 @@ app.whenReady().then(() => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
+
+  // Device ID IPC
+  ipcMain.handle('get-device-id', () => {
+    try {
+      return machineIdSync();
+    } catch (e) {
+      console.error('Failed to get machine ID', e);
+      return 'UNKNOWN_DEVICE_ID';
+    }
+  })
 
   // Download Asset IPC
   ipcMain.handle('download-asset', async (event, url: string, filename: string) => {
@@ -113,6 +126,37 @@ app.whenReady().then(() => {
 
   createWindow()
 
+  // Bắt đầu kiểm tra Update sau khi tạo Window
+  if (!is.dev) {
+    autoUpdater.checkForUpdatesAndNotify()
+  }
+
+  // --- AUTO UPDATER EVENTS ---
+  autoUpdater.on('update-available', (info) => {
+    // Thông báo cho renderer biết có phiên bản mới
+    BrowserWindow.getAllWindows().forEach((win) => {
+      win.webContents.send('updater-message', { type: 'update-available', info })
+    })
+  })
+
+  autoUpdater.on('download-progress', (progressObj) => {
+    BrowserWindow.getAllWindows().forEach((win) => {
+      win.webContents.send('updater-message', { type: 'download-progress', progress: progressObj.percent })
+    })
+  })
+
+  autoUpdater.on('update-downloaded', (info) => {
+    BrowserWindow.getAllWindows().forEach((win) => {
+      win.webContents.send('updater-message', { type: 'update-downloaded', info })
+    })
+  })
+
+  autoUpdater.on('error', (err) => {
+    BrowserWindow.getAllWindows().forEach((win) => {
+      win.webContents.send('updater-message', { type: 'error', error: err.message })
+    })
+  })
+
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
@@ -131,3 +175,7 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
+ipcMain.handle('quit-and-install', () => {
+  autoUpdater.quitAndInstall()
+})

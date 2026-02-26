@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { X, FolderOpen, Lock, Unlock } from 'lucide-react'
+import { X, FolderOpen, Lock, Unlock, Key, Loader2, Check } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 import '../styles/globals.css'
 import '../styles/components.css'
 
@@ -12,6 +13,8 @@ interface SettingsModalProps {
 export function SettingsModal({ isOpen, onClose, onAdminChange }: SettingsModalProps) {
     const [passcode, setPasscode] = useState('')
     const [isAdmin, setIsAdmin] = useState(false)
+    const [isGenerating, setIsGenerating] = useState(false)
+    const [generatedKey, setGeneratedKey] = useState<string | null>(null)
 
     useEffect(() => {
         const adminState = localStorage.getItem('resolve_is_admin') === 'true'
@@ -35,6 +38,30 @@ export function SettingsModal({ isOpen, onClose, onAdminChange }: SettingsModalP
         setIsAdmin(false)
         setPasscode('')
         if (onAdminChange) onAdminChange(false)
+    }
+
+    const generateLicenseKey = async () => {
+        setIsGenerating(true)
+        setGeneratedKey(null)
+
+        try {
+            // Chuỗi ngẫu nhiên 4 đoạn
+            const randSegment = () => Math.random().toString(36).substring(2, 6).toUpperCase()
+            const newKey = `GLAB-${randSegment()}-${randSegment()}-${randSegment()}`
+
+            const { error } = await supabase.from('licenses').insert({
+                key: newKey,
+                status: 'active'
+            })
+
+            if (error) throw error
+            setGeneratedKey(newKey)
+        } catch (e: any) {
+            console.error('Error generating key', e)
+            alert('Lỗi tạo mã: ' + e.message)
+        } finally {
+            setIsGenerating(false)
+        }
     }
 
     if (!isOpen) return null
@@ -92,12 +119,46 @@ export function SettingsModal({ isOpen, onClose, onAdminChange }: SettingsModalP
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 mt-2 pt-2" style={{ borderTop: '1px dashed rgba(255,255,255,0.05)' }}>
+                    <div className="flex-col gap-2 mt-2 pt-2" style={{ borderTop: '1px dashed rgba(255,255,255,0.05)' }}>
                         {isAdmin ? (
-                            <button className="btn btn-ghost w-full justify-between" onClick={lockAdmin} style={{ color: 'var(--success)' }}>
-                                <span className="flex items-center gap-2"><Unlock size={14} /> Admin Mode Enabled</span>
-                                <span style={{ fontSize: '11px', opacity: 0.7 }}>Click to Lock</span>
-                            </button>
+                            <>
+                                <button className="btn btn-ghost w-full justify-between" onClick={lockAdmin} style={{ color: 'var(--success)', marginBottom: '12px' }}>
+                                    <span className="flex items-center gap-2"><Unlock size={14} /> Admin Mode Enabled</span>
+                                    <span style={{ fontSize: '11px', opacity: 0.7 }}>Click to Lock</span>
+                                </button>
+
+                                <div className="p-4" style={{ background: 'rgba(34,197,94,0.05)', borderRadius: '8px', border: '1px solid rgba(34,197,94,0.2)' }}>
+                                    <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <Key size={14} /> Trình tạo License Key
+                                    </h3>
+                                    <p className="text-muted" style={{ fontSize: '12px', marginBottom: '12px' }}>Tạo mã bản quyền ngẫu nhiên để cung cấp cho người mua.</p>
+
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={generatedKey || ''}
+                                            readOnly
+                                            placeholder="GLAB-XXXX-XXXX-XXXX"
+                                            className="w-full"
+                                            style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', fontFamily: 'monospace' }}
+                                        />
+                                        <button
+                                            className="btn btn-primary"
+                                            onClick={generateLicenseKey}
+                                            disabled={isGenerating}
+                                            style={{ padding: '8px 16px', fontSize: '12px', whiteSpace: 'nowrap' }}
+                                        >
+                                            {isGenerating ? <Loader2 size={14} className="animate-pulse" /> : 'Tạo mới'}
+                                        </button>
+                                    </div>
+
+                                    {generatedKey && (
+                                        <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--success)', fontSize: '12px' }}>
+                                            <Check size={14} /> <span>Đã tạo & lưu vào hệ thống! Gửi mã trên cho khách hàng.</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
                         ) : (
                             <div className="flex items-center gap-2 w-full">
                                 <Lock size={14} className="text-muted" />

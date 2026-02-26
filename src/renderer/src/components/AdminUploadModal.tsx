@@ -50,21 +50,119 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
                 return publicUrl
             }
 
+            // Utility: Compress Image under max size (default 500KB)
+            const compressImage = async (file: File, maxSizeKB: number = 500): Promise<File> => {
+                if (!file.type.startsWith('image/')) return file;
+
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.src = URL.createObjectURL(file);
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        // Max dimensions to prevent huge memory spikes
+                        const MAX_WIDTH = 1920;
+                        const MAX_HEIGHT = 1080;
+
+                        if (width > height) {
+                            if (width > MAX_WIDTH) {
+                                height = Math.round((height * MAX_WIDTH) / width);
+                                width = MAX_WIDTH;
+                            }
+                        } else {
+                            if (height > MAX_HEIGHT) {
+                                width = Math.round((width * MAX_HEIGHT) / height);
+                                height = MAX_HEIGHT;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) {
+                            resolve(file); // Fallback
+                            return;
+                        }
+
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Binary search for optimal quality
+                        let low = 0.0;
+                        let high = 1.0;
+                        let quality = 0.8;
+                        let bestBlob: Blob | null = null;
+
+                        const tryCompress = (q: number): Promise<Blob | null> => {
+                            return new Promise(res => canvas.toBlob(b => res(b as any), 'image/jpeg', q));
+                        };
+
+                        const processCompression = async () => {
+                            let attempts = 0;
+                            while (attempts < 5) { // Max 5 iterations
+                                const blob = await tryCompress(quality);
+                                if (!blob) break;
+
+                                const kb = blob.size / 1024;
+                                if (kb <= maxSizeKB) {
+                                    bestBlob = blob;
+                                    low = quality; // Try higher quality
+                                    quality = (low + high) / 2;
+                                } else {
+                                    high = quality; // Try lower quality
+                                    quality = (low + high) / 2;
+                                }
+                                attempts++;
+                            }
+
+                            if (bestBlob) {
+                                resolve(new File([bestBlob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+                                    type: 'image/jpeg',
+                                    lastModified: Date.now(),
+                                }));
+                            } else {
+                                resolve(file); // Fallback
+                            }
+                        };
+                        processCompression();
+                    };
+                    img.onerror = () => reject(new Error('Failed to load image for compression'));
+                });
+            };
+
+            // Helper function to delete old file from storage
+            const deleteStorageFile = async (url: string, bucketPath: string) => {
+                if (!url) return;
+                try {
+                    const match = url.match(new RegExp(`/${bucketPath}/(.+)`));
+                    if (match && match[1]) {
+                        await supabase.storage.from('resolve-assets').remove([`${bucketPath}/${match[1]}`]);
+                    }
+                } catch (e) {
+                    console.warn('Failed to delete old storage file', e);
+                }
+            }
+
             // 1. Upload Asset File
             let assetUrl = initialData?.file_url;
             if (assetFile) {
+                if (initialData?.file_url) await deleteStorageFile(initialData.file_url, 'assets');
                 assetUrl = await uploadFile(assetFile, 'assets')
             }
 
-            // 2. Upload Thumbnail (Optional)
+            // 2. Upload Thumbnail (Optional) with compression
             let thumbnailUrl: string | null = initialData?.thumbnail_url || null
             if (thumbnailFile) {
-                thumbnailUrl = await uploadFile(thumbnailFile, 'thumbnails')
+                if (initialData?.thumbnail_url) await deleteStorageFile(initialData.thumbnail_url, 'thumbnails');
+                const compressedFile = await compressImage(thumbnailFile, 500);
+                thumbnailUrl = await uploadFile(compressedFile, 'thumbnails')
             }
 
             // 3. Upload Video Preview (Optional)
             let videoUrl: string | null = initialData?.video_preview_url || null
             if (videoFile) {
+                if (initialData?.video_preview_url) await deleteStorageFile(initialData.video_preview_url, 'previews');
                 videoUrl = await uploadFile(videoFile, 'previews')
             }
 
@@ -87,7 +185,7 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
                 const { error } = await supabase.from('assets').update(payload).eq('id', initialData.id);
                 dbError = error;
             } else {
-                const { error } = await supabase.from('assets').insert(payload);
+                const { error } = await supabase.from('assets').insert([payload]);
                 dbError = error;
             }
 

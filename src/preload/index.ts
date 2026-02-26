@@ -3,7 +3,13 @@ import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
 const api = {
-  downloadAsset: (url: string, filename: string) => ipcRenderer.invoke('download-asset', url, filename)
+  downloadAsset: (url: string, filename: string) => ipcRenderer.invoke('download-asset', url, filename),
+  getDeviceId: () => ipcRenderer.invoke('get-device-id'),
+  quitAndInstall: () => ipcRenderer.invoke('quit-and-install'),
+  onUpdaterMessage: (callback: (data: any) => void) => {
+    ipcRenderer.on('updater-message', (_event, data) => callback(data))
+    return () => ipcRenderer.removeAllListeners('updater-message')
+  }
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

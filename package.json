@@ -1,6 +1,6 @@
 {
-  "name": "resolve-asset-manager",
-  "version": "1.0.0",
+  "name": "glab-assets",
+  "version": "1.0.1",
   "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
   "author": "example.com",
@@ -25,7 +25,9 @@
     "@electron-toolkit/utils": "^4.0.0",
     "@supabase/supabase-js": "^2.97.0",
     "clsx": "^2.1.1",
+    "electron-updater": "^6.8.3",
     "lucide-react": "^0.575.0",
+    "node-machine-id": "^1.1.12",
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {

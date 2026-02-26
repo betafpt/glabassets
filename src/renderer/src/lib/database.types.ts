@@ -55,6 +55,32 @@ export interface Database {
                     tags?: string[] | null
                 }
             }
+            licenses: {
+                Row: {
+                    id: string
+                    key: string
+                    device_id: string | null
+                    status: 'active' | 'revoked'
+                    created_at: string
+                    expires_at: string | null
+                }
+                Insert: {
+                    id?: string
+                    key: string
+                    device_id?: string | null
+                    status?: 'active' | 'revoked'
+                    created_at?: string
+                    expires_at?: string | null
+                }
+                Update: {
+                    id?: string
+                    key?: string
+                    device_id?: string | null
+                    status?: 'active' | 'revoked'
+                    created_at?: string
+                    expires_at?: string | null
+                }
+            }
         }
     }
 }
