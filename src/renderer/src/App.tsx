@@ -50,6 +50,10 @@ function App() {
     // Listen for Auto Updater Messages
     if (window.api && window.api.onUpdaterMessage) {
       const updaterMessageListener = (data: any) => {
+        // Nếu là check ngầm lúc mở app, thì GIẤU giao diện Checking và Not Available
+        if (!data.isManual && (data.type === 'checking-for-update' || data.type === 'update-not-available' || data.type === 'error')) {
+          return;
+        }
         setUpdateInfo(data)
       }
       const cleanupUpdater = window.api.onUpdaterMessage(updaterMessageListener)

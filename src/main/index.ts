@@ -43,6 +43,8 @@ function createWindow(): void {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
+let isManualUpdateCheck = false
+
 app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
@@ -126,7 +128,7 @@ app.whenReady().then(() => {
 
   createWindow()
 
-  // Bắt đầu kiểm tra Update sau khi tạo Window
+  // Bắt đầu kiểm tra Update sau khi tạo Window (Tự động)
   if (!is.dev) {
     autoUpdater.checkForUpdatesAndNotify()
   }
@@ -134,39 +136,43 @@ app.whenReady().then(() => {
   // --- AUTO UPDATER EVENTS ---
   autoUpdater.on('checking-for-update', () => {
     BrowserWindow.getAllWindows().forEach((win) => {
-      win.webContents.send('updater-message', { type: 'checking-for-update' })
+      win.webContents.send('updater-message', { type: 'checking-for-update', isManual: isManualUpdateCheck })
     })
   })
 
   autoUpdater.on('update-available', (info) => {
     // Thông báo cho renderer biết có phiên bản mới
     BrowserWindow.getAllWindows().forEach((win) => {
-      win.webContents.send('updater-message', { type: 'update-available', info })
+      win.webContents.send('updater-message', { type: 'update-available', info, isManual: isManualUpdateCheck })
     })
   })
 
   autoUpdater.on('update-not-available', (info) => {
     BrowserWindow.getAllWindows().forEach((win) => {
-      win.webContents.send('updater-message', { type: 'update-not-available', info })
+      win.webContents.send('updater-message', { type: 'update-not-available', info, isManual: isManualUpdateCheck })
     })
+    // Reset cờ sau khi check xong để các lần check sau tính lại
+    isManualUpdateCheck = false
   })
 
   autoUpdater.on('download-progress', (progressObj) => {
     BrowserWindow.getAllWindows().forEach((win) => {
-      win.webContents.send('updater-message', { type: 'download-progress', progress: progressObj.percent })
+      win.webContents.send('updater-message', { type: 'download-progress', progress: progressObj.percent, isManual: isManualUpdateCheck })
     })
   })
 
   autoUpdater.on('update-downloaded', (info) => {
     BrowserWindow.getAllWindows().forEach((win) => {
-      win.webContents.send('updater-message', { type: 'update-downloaded', info })
+      win.webContents.send('updater-message', { type: 'update-downloaded', info, isManual: isManualUpdateCheck })
     })
+    isManualUpdateCheck = false
   })
 
   autoUpdater.on('error', (err) => {
     BrowserWindow.getAllWindows().forEach((win) => {
-      win.webContents.send('updater-message', { type: 'error', error: err.message })
+      win.webContents.send('updater-message', { type: 'error', error: err.message, isManual: isManualUpdateCheck })
     })
+    isManualUpdateCheck = false
   })
 
   app.on('activate', function () {
@@ -193,6 +199,8 @@ ipcMain.handle('quit-and-install', () => {
 })
 
 ipcMain.handle('check-for-updates', () => {
+  // Khi người dùng chủ động ấn nút Check
+  isManualUpdateCheck = true
   autoUpdater.checkForUpdatesAndNotify()
 })
 
