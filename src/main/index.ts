@@ -132,10 +132,22 @@ app.whenReady().then(() => {
   }
 
   // --- AUTO UPDATER EVENTS ---
+  autoUpdater.on('checking-for-update', () => {
+    BrowserWindow.getAllWindows().forEach((win) => {
+      win.webContents.send('updater-message', { type: 'checking-for-update' })
+    })
+  })
+
   autoUpdater.on('update-available', (info) => {
     // Thông báo cho renderer biết có phiên bản mới
     BrowserWindow.getAllWindows().forEach((win) => {
       win.webContents.send('updater-message', { type: 'update-available', info })
+    })
+  })
+
+  autoUpdater.on('update-not-available', (info) => {
+    BrowserWindow.getAllWindows().forEach((win) => {
+      win.webContents.send('updater-message', { type: 'update-not-available', info })
     })
   })
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Folder, Film, FileType2, Settings, DownloadCloud, Upload, Info, FileVideo, Trash2, Edit, LayoutGrid, Maximize, RefreshCw, X } from 'lucide-react'
+import { Folder, Film, FileType2, DownloadCloud, Upload, Settings, RefreshCw, X, LayoutGrid, Maximize, Check, Info, FileVideo, Edit, Trash2 } from 'lucide-react'
 import './styles/globals.css'
 import './styles/components.css'
 import './styles/utilities.css'
@@ -37,18 +37,30 @@ function App() {
 
     // Fetch App Version
     if (window.api && window.api.getAppVersion) {
-      window.api.getAppVersion().then(version => setAppVersion(`v${version}`))
+      window.api.getAppVersion().then(version => setAppVersion(`v${version} `))
     }
 
     // Listen to download progress from main process
-    const listener = (_event: any, data: any) => {
+    const downloadProgressListener = (_event: any, data: any) => {
       setDownloadProgress(Math.round(data.progress))
     }
 
-    window.electron.ipcRenderer.on('download-progress', listener)
+    window.electron.ipcRenderer.on('download-progress', downloadProgressListener)
+
+    // Listen for Auto Updater Messages
+    if (window.api && window.api.onUpdaterMessage) {
+      const updaterMessageListener = (data: any) => {
+        setUpdateInfo(data)
+      }
+      const cleanupUpdater = window.api.onUpdaterMessage(updaterMessageListener)
+      return () => {
+        window.electron.ipcRenderer.removeListener('download-progress', downloadProgressListener)
+        cleanupUpdater()
+      }
+    }
 
     return () => {
-      window.electron.ipcRenderer.removeListener('download-progress', listener)
+      window.electron.ipcRenderer.removeListener('download-progress', downloadProgressListener)
     }
   }, [])
 
@@ -132,9 +144,9 @@ function App() {
       const savedPath = await window.api.downloadAsset(asset.file_url, filename)
 
       // We can use a custom toast instead in the future, for now alert is enough to debug
-      alert(`🎉 Installed successfully at: \n${savedPath}`)
+      alert(`🎉 Installed successfully at: \n${savedPath} `)
     } catch (err: any) {
-      alert(`❌ Failed to install: \n${err.message || err}`)
+      alert(`❌ Failed to install: \n${err.message || err} `)
     } finally {
       setDownloadingId(null)
       setDownloadProgress(0)
@@ -142,7 +154,7 @@ function App() {
   }
 
   const handleDelete = async (asset: any) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn "${asset.title}" không ?`)) return;
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa vĩnh viễn "${asset.title}" không ? `)) return;
     try {
       // 1. Delete from DB
       const { error: dbError } = await supabase.from('assets').delete().eq('id', asset.id);
@@ -153,7 +165,7 @@ function App() {
         if (!url) return;
         try {
           // Extract file path from Supabase URL: .../storage/v1/object/public/resolve-assets/assets/foo.drfx -> assets/foo.drfx
-          const match = url.match(new RegExp(`/${bucketPath}/(.+)`));
+          const match = url.match(new RegExp(`/ ${bucketPath}/(.+)`));
           if (match && match[1]) {
             await supabase.storage.from('resolve-assets').remove([`${bucketPath}/${match[1]}`]);
           }
@@ -194,55 +206,73 @@ function App() {
         />
       )}
 
-      {/* Update Toast Notifications */}
-      {updateInfo && (updateInfo.type === 'update-available' || updateInfo.type === 'download-progress' || updateInfo.type === 'update-downloaded') && (
-        <div style={{
-          position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999,
-          background: 'var(--bg-card)', border: '1px solid var(--primary)',
-          padding: '16px', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-          maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '8px',
-          animation: 'slideUp 0.3s ease-out'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: 600 }}>
-            <RefreshCw size={18} className={updateInfo.type === 'download-progress' ? "animate-spin" : ""} />
-            {updateInfo.type === 'update-available' && <span>Đã có phiên bản mới!</span>}
-            {updateInfo.type === 'download-progress' && <span>Đang tải bản cập nhật... {Math.round(updateInfo.progress || 0)}%</span>}
-            {updateInfo.type === 'update-downloaded' && <span>Sẵn sàng cập nhật</span>}
-          </div>
+      {/* Centered Update Overlay Modal */}
+      {updateInfo && (
+        <div className="modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="modal-content" style={{ maxWidth: '400px', textAlign: 'center', padding: '32px' }}>
 
-          {updateInfo.type === 'update-available' && (
-            <p className="text-muted" style={{ fontSize: '12px' }}>Vui lòng đợi trong giây lát để tải dữ liệu nền...</p>
-          )}
-
-          {updateInfo.type === 'download-progress' && (
-            <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-              <div style={{ width: `${updateInfo.progress}%`, height: '100%', background: 'var(--primary)', transition: 'width 0.2s' }} />
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', color: 'var(--primary)' }}>
+              {updateInfo.type === 'checking-for-update' || updateInfo.type === 'download-progress' ? (
+                <RefreshCw size={48} className="animate-spin" />
+              ) : updateInfo.type === 'update-not-available' ? (
+                <Check size={48} />
+              ) : updateInfo.type === 'error' ? (
+                <X size={48} color="var(--danger)" />
+              ) : (
+                <DownloadCloud size={48} />
+              )}
             </div>
-          )}
 
-          {updateInfo.type === 'update-downloaded' && (
-            <>
-              <p className="text-muted" style={{ fontSize: '12px' }}>Tải xuống hoàn tất. Khởi động lại ứng dụng ngay để áp dụng!</p>
+            <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>
+              {updateInfo.type === 'checking-for-update' && 'Đang kiểm tra cập nhật...'}
+              {updateInfo.type === 'update-available' && 'Đã tìm thấy phiên bản mới!'}
+              {updateInfo.type === 'download-progress' && 'Đang tải bản cập nhật...'}
+              {updateInfo.type === 'update-downloaded' && 'Sẵn sàng cập nhật'}
+              {updateInfo.type === 'update-not-available' && 'Bạn đang dùng bản mới nhất'}
+              {updateInfo.type === 'error' && 'Lỗi Cập nhật'}
+            </h2>
+
+            {updateInfo.type === 'update-available' && (
+              <p className="text-muted" style={{ fontSize: '13px' }}>Vui lòng đợi trong giây lát, hệ thống đang tự động tải xuống dữ liệu nền...</p>
+            )}
+
+            {updateInfo.type === 'download-progress' && (
+              <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden', marginTop: '16px' }}>
+                <div style={{ width: `${updateInfo.progress}%`, height: '100%', background: 'var(--primary)', transition: 'width 0.2s' }} />
+              </div>
+            )}
+            {updateInfo.type === 'download-progress' && (
+              <p className="text-muted" style={{ fontSize: '12px', marginTop: '8px' }}>{Math.round(updateInfo.progress || 0)}%</p>
+            )}
+
+            {updateInfo.type === 'update-downloaded' && (
+              <>
+                <p className="text-muted" style={{ fontSize: '13px', marginBottom: '24px' }}>Tải xuống hoàn tất. Ứng dụng cần khởi động lại để áp dụng thay đổi!</p>
+                <button
+                  className="btn btn-primary w-full"
+                  onClick={() => {
+                    if (window.api && window.api.quitAndInstall) {
+                      window.api.quitAndInstall()
+                    }
+                  }}
+                  style={{ padding: '12px', fontSize: '14px' }}
+                >
+                  Cài đặt & Khởi động lại ngay
+                </button>
+              </>
+            )}
+
+            {(updateInfo.type === 'update-not-available' || updateInfo.type === 'error') && (
               <button
-                className="btn btn-primary"
-                onClick={() => {
-                  if (window.api && window.api.quitAndInstall) {
-                    window.api.quitAndInstall()
-                  }
-                }}
-                style={{ padding: '8px', fontSize: '13px', marginTop: '4px' }}
+                className="btn btn-primary mt-6"
+                onClick={() => setUpdateInfo(null)}
+                style={{ padding: '8px 24px' }}
               >
-                Cài đặt & Khởi động lại
+                Đóng
               </button>
-            </>
-          )}
+            )}
 
-          <button
-            onClick={() => setUpdateInfo(null)}
-            style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: '#666', cursor: 'pointer' }}
-          >
-            <X size={14} />
-          </button>
+          </div>
         </div>
       )}
 
