@@ -9,6 +9,7 @@ declare global {
       getAppVersion: () => Promise<string>,
       quitAndInstall: () => Promise<void>,
       checkForUpdates: () => Promise<void>,
+      openExternal: (url: string) => Promise<void>,
       onUpdaterMessage: (callback: (data: any) => void) => () => void
     }
   }

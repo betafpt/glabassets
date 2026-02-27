@@ -204,6 +204,10 @@ ipcMain.handle('check-for-updates', () => {
   autoUpdater.checkForUpdatesAndNotify()
 })
 
+ipcMain.handle('open-external', (_event, url: string) => {
+  shell.openExternal(url)
+})
+
 ipcMain.handle('get-app-version', () => {
   return app.getVersion()
 })

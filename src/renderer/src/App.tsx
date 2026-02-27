@@ -237,9 +237,31 @@ function App() {
             </h2>
 
             {updateInfo.type === 'error' && (
-              <p className="text-danger" style={{ fontSize: '12px', marginTop: '8px', wordBreak: 'break-word', color: 'var(--danger)' }}>
-                {updateInfo.error || "Không rõ nguyên nhân."}
-              </p>
+              <div style={{ marginTop: '16px' }}>
+                {updateInfo.error?.includes('signature') ? (
+                  <>
+                    <p style={{ fontSize: '13px', color: 'var(--text)', marginBottom: '16px' }}>
+                      macOS yêu cầu chứng chỉ Apple Developer trả phí để cập nhật ngầm. Bạn cần tải bản mới và cài đặt thủ công.
+                    </p>
+                    <button
+                      className="btn btn-primary w-full"
+                      onClick={() => {
+                        if (window.api && window.api.openExternal) {
+                          window.api.openExternal('https://github.com/betafpt/glabassets/releases/latest')
+                        }
+                        setUpdateInfo(null)
+                      }}
+                      style={{ padding: '12px', fontSize: '14px', marginBottom: '8px' }}
+                    >
+                      Mở trang tải bản cập nhật
+                    </button>
+                  </>
+                ) : (
+                  <p className="text-danger" style={{ fontSize: '12px', marginTop: '8px', wordBreak: 'break-word', color: 'var(--danger)' }}>
+                    {updateInfo.error || "Không rõ nguyên nhân."}
+                  </p>
+                )}
+              </div>
             )}
 
             {updateInfo.type === 'update-available' && (
@@ -272,7 +294,7 @@ function App() {
               </>
             )}
 
-            {(updateInfo.type === 'update-not-available' || updateInfo.type === 'error') && (
+            {(updateInfo.type === 'update-not-available' || (updateInfo.type === 'error' && !updateInfo.error?.includes('signature'))) && (
               <button
                 className="btn btn-primary mt-6"
                 onClick={() => setUpdateInfo(null)}

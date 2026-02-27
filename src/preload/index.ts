@@ -8,6 +8,7 @@ const api = {
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   quitAndInstall: () => ipcRenderer.invoke('quit-and-install'),
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
   onUpdaterMessage: (callback: (data: any) => void) => {
     ipcRenderer.on('updater-message', (_event, data) => callback(data))
     return () => ipcRenderer.removeAllListeners('updater-message')
