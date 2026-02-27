@@ -289,7 +289,10 @@ function App() {
           </button>
 
           <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
-            G.Lab Assets {appVersion}
+            <p>G.Lab Assets {appVersion}</p>
+            <p style={{ marginTop: '4px' }}>
+              Collect by <a href="https://www.facebook.com/giangphoto/" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', textDecoration: 'none', transition: 'opacity 0.2s', opacity: 0.8 }} onMouseEnter={(e) => e.currentTarget.style.opacity = '1'} onMouseLeave={(e) => e.currentTarget.style.opacity = '0.8'}>Giang Nguyen</a>
+            </p>
           </div>
         </div>
       </aside>
