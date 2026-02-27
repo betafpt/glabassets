@@ -13,6 +13,9 @@ asarUnpack:
   - resources/**
 win:
   executableName: resolve-asset-manager
+  target:
+    - nsis
+    - zip
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
@@ -25,7 +28,9 @@ mac:
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  target: dmg
+  target: 
+    - dmg
+    - zip
   identity: null
 dmg:
   artifactName: ${name}-${version}-mac.${ext}

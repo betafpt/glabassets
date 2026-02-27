@@ -236,6 +236,12 @@ function App() {
               {updateInfo.type === 'error' && 'Lỗi Cập nhật'}
             </h2>
 
+            {updateInfo.type === 'error' && (
+              <p className="text-danger" style={{ fontSize: '12px', marginTop: '8px', wordBreak: 'break-word', color: 'var(--danger)' }}>
+                {updateInfo.error || "Không rõ nguyên nhân."}
+              </p>
+            )}
+
             {updateInfo.type === 'update-available' && (
               <p className="text-muted" style={{ fontSize: '13px' }}>Vui lòng đợi trong giây lát, hệ thống đang tự động tải xuống dữ liệu nền...</p>
             )}
