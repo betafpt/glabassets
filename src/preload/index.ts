@@ -5,6 +5,7 @@ import { electronAPI } from '@electron-toolkit/preload'
 const api = {
   downloadAsset: (url: string, filename: string) => ipcRenderer.invoke('download-asset', url, filename),
   getDeviceId: () => ipcRenderer.invoke('get-device-id'),
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   quitAndInstall: () => ipcRenderer.invoke('quit-and-install'),
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   onUpdaterMessage: (callback: (data: any) => void) => {

@@ -8,9 +8,10 @@ interface SettingsModalProps {
     isOpen: boolean
     onClose: () => void
     onAdminChange?: (isAdmin: boolean) => void
+    appVersion: string
 }
 
-export function SettingsModal({ isOpen, onClose, onAdminChange }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, onAdminChange, appVersion }: SettingsModalProps) {
     const [passcode, setPasscode] = useState('')
     const [isAdmin, setIsAdmin] = useState(false)
     const [isGenerating, setIsGenerating] = useState(false)
@@ -113,7 +114,7 @@ export function SettingsModal({ isOpen, onClose, onAdminChange }: SettingsModalP
 
                 <div className="p-4 border-t flex-col gap-4" style={{ borderColor: 'var(--br-card)', background: 'rgba(0,0,0,0.1)' }}>
                     <div className="flex justify-between items-center w-full">
-                        <span className="text-muted" style={{ fontSize: '12px' }}>v1.0.0</span>
+                        <span className="text-muted" style={{ fontSize: '12px' }}>{appVersion}</span>
                         <div className="flex gap-2">
                             <button className="btn btn-primary" onClick={() => window.api?.checkForUpdates?.()} style={{ fontSize: '12px', padding: '6px 12px' }}>Check for Updates</button>
                             <button className="btn btn-ghost" onClick={onClose}>Close</button>

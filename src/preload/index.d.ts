@@ -6,6 +6,7 @@ declare global {
     api: {
       downloadAsset: (url: string, filename: string) => Promise<string>,
       getDeviceId: () => Promise<string>,
+      getAppVersion: () => Promise<string>,
       quitAndInstall: () => Promise<void>,
       checkForUpdates: () => Promise<void>,
       onUpdaterMessage: (callback: (data: any) => void) => () => void

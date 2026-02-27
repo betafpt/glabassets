@@ -183,3 +183,7 @@ ipcMain.handle('quit-and-install', () => {
 ipcMain.handle('check-for-updates', () => {
   autoUpdater.checkForUpdatesAndNotify()
 })
+
+ipcMain.handle('get-app-version', () => {
+  return app.getVersion()
+})

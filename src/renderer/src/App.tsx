@@ -28,9 +28,17 @@ function App() {
   // Auto Updater State
   const [updateInfo, setUpdateInfo] = useState<{ type: string; progress?: number; info?: any; error?: string } | null>(null)
 
+  // App Version
+  const [appVersion, setAppVersion] = useState<string>('v1.0.0')
+
   useEffect(() => {
     setIsAdmin(localStorage.getItem('resolve_is_admin') === 'true')
     fetchAssets()
+
+    // Fetch App Version
+    if (window.api && window.api.getAppVersion) {
+      window.api.getAppVersion().then(version => setAppVersion(`v${version}`))
+    }
 
     // Listen to download progress from main process
     const listener = (_event: any, data: any) => {
@@ -279,6 +287,10 @@ function App() {
             <Settings size={18} />
             Settings
           </button>
+
+          <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
+            G.Lab Assets {appVersion}
+          </div>
         </div>
       </aside>
 
@@ -396,7 +408,7 @@ function App() {
       </main>
 
       {/* Modals */}
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onAdminChange={(val) => setIsAdmin(val)} />
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onAdminChange={(val) => setIsAdmin(val)} appVersion={appVersion} />
       {
         isUploadModalOpen && <AdminUploadModal
           onClose={() => setIsUploadModalOpen(false)}
