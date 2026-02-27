@@ -32,6 +32,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VITE_SUPABASE_URL: https://tavakxhaptxuttgdalkr.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_42f3nQgr40vdkf6u6yX-EA_6j1tXLD0
         run: npm run build:mac -- -p always
 
       - name: Build and Publish (Windows)
@@ -39,4 +41,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VITE_SUPABASE_URL: https://tavakxhaptxuttgdalkr.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_42f3nQgr40vdkf6u6yX-EA_6j1tXLD0
         run: npm run build:win -- -p always
