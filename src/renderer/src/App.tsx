@@ -757,7 +757,7 @@ const ExpandableDescription = ({ text }: { text: string }) => {
     <div style={{ color: '#ccc', lineHeight: '1.6', marginBottom: '24px', whiteSpace: 'pre-wrap', fontSize: '14px' }}>
       {displayText}
       {shouldTruncate && (
-        <button onClick={() => setExpanded(!expanded)} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: 0, marginLeft: '8px', fontSize: '13px', fontWeight: 500, outline: 'none' }}>
+        <button onClick={() => setExpanded(!expanded)} style={{ background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.3)', color: 'var(--primary)', cursor: 'pointer', padding: '2px 8px', marginLeft: '8px', fontSize: '11px', fontWeight: 600, outline: 'none', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', transition: 'all 0.2s', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
           {expanded ? 'Thu gọn' : 'Đọc tiếp'}
         </button>
       )}
