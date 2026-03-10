@@ -129,9 +129,9 @@ app.whenReady().then(() => {
   createWindow()
 
   // Bắt đầu kiểm tra Update sau khi tạo Window (Tự động)
-  if (!is.dev) {
+  setTimeout(() => {
     autoUpdater.checkForUpdatesAndNotify()
-  }
+  }, 3000)
 
   // --- AUTO UPDATER EVENTS ---
   autoUpdater.on('checking-for-update', () => {

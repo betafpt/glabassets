@@ -130,11 +130,15 @@ function App() {
     // Listen for Auto Updater Messages
     if (window.api && window.api.onUpdaterMessage) {
       const cleanup = window.api.onUpdaterMessage((data) => {
+        // If it was an automatic hidden check, only show UI when there's an actual update
+        if (!data.isManual && (data.type === 'checking-for-update' || data.type === 'update-not-available')) {
+          return;
+        }
         setUpdateInfo(data)
       })
       return cleanup
     }
-    return undefined // added explicit return as per lint feedback
+    return undefined
   }, [])
 
   async function fetchAssets() {
