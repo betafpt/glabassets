@@ -1,0 +1,4 @@
+provider: github
+owner: betafpt
+repo: glabassets
+releaseType: release
