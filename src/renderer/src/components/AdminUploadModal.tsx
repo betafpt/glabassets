@@ -18,6 +18,7 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
     const [assetFile, setAssetFile] = useState<File | null>(null)
     const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
     const [videoFile, setVideoFile] = useState<File | null>(null)
+    const [previewVideoLink, setPreviewVideoLink] = useState(initialData?.video_preview_url?.startsWith('http') && !initialData?.video_preview_url?.includes('supabase.co') ? initialData.video_preview_url : '')
 
     const [isUploading, setIsUploading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -175,8 +176,10 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
 
             // 3. Upload Video Preview (Optional)
             let videoUrl: string | null = initialData?.video_preview_url || null
-            if (videoFile) {
-                if (initialData?.video_preview_url) await deleteStorageFile(initialData.video_preview_url, 'previews');
+            if (previewVideoLink) {
+                videoUrl = previewVideoLink
+            } else if (videoFile) {
+                if (initialData?.video_preview_url && initialData.video_preview_url.includes('supabase.co')) await deleteStorageFile(initialData.video_preview_url, 'previews');
                 videoUrl = await uploadFile(videoFile, 'previews')
             }
 
@@ -323,12 +326,21 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
                             />
                         </div>
 
-                        <div style={{ flex: 1 }}>
-                            <label><FileVideo size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> Preview Video (.mp4) (Optional)</label>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <label><FileVideo size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> Preview Video/GIF (Optional)</label>
+                            <input
+                                type="url"
+                                value={previewVideoLink}
+                                onChange={(e) => setPreviewVideoLink(e.target.value)}
+                                placeholder="External Link (e.g. from Imgur or Giphy)"
+                                style={{ marginBottom: '8px' }}
+                            />
+                            <div style={{ textAlign: 'center', fontSize: '12px', color: '#666' }}>— OR —</div>
                             <input
                                 type="file"
-                                accept="video/mp4"
+                                accept="video/mp4, image/gif"
                                 onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                                disabled={!!previewVideoLink}
                             />
                         </div>
                     </div>

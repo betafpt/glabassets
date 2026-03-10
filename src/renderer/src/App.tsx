@@ -444,18 +444,27 @@ function App() {
                   )}
                   {/* Video block if url exists */}
                   {asset.video_preview_url && (
-                    <video
-                      className="asset-video"
-                      src={asset.video_preview_url}
-                      muted
-                      loop
-                      playsInline
-                      onMouseOver={(e) => e.currentTarget.play()}
-                      onMouseOut={(e) => {
-                        e.currentTarget.pause()
-                        e.currentTarget.currentTime = 0
-                      }}
-                    />
+                    asset.video_preview_url.match(/\.(gif|jpe?g|png|webp)(\?.*)?$/i) ? (
+                      <img
+                        src={asset.video_preview_url}
+                        alt="Preview"
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1 }}
+                      />
+                    ) : (
+                      <video
+                        className="asset-video"
+                        src={asset.video_preview_url}
+                        muted
+                        loop
+                        playsInline
+                        onMouseOver={(e) => e.currentTarget.play()}
+                        onMouseOut={(e) => {
+                          e.currentTarget.pause()
+                          e.currentTarget.currentTime = 0
+                        }}
+                        style={{ zIndex: 1 }}
+                      />
+                    )
                   )}
                   <div className="hover-action" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', opacity: 0, transition: 'opacity 0.2s', pointerEvents: 'none' }}>
                     <Info size={32} color="white" />
@@ -539,7 +548,11 @@ function App() {
                 </div>
               ) : selectedAssetDetail.video_preview_url ? (
                 <div style={{ width: '100%', backgroundColor: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <video src={selectedAssetDetail.video_preview_url} controls muted autoPlay style={{ width: '100%', maxHeight: '400px' }} />
+                  {selectedAssetDetail.video_preview_url.match(/\.(gif|jpe?g|png|webp)(\?.*)?$/i) ? (
+                    <img src={selectedAssetDetail.video_preview_url} alt="Preview" style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }} />
+                  ) : (
+                    <video src={selectedAssetDetail.video_preview_url} controls muted autoPlay style={{ width: '100%', maxHeight: '400px' }} />
+                  )}
                 </div>
               ) : (
                 <div style={{ width: '100%', height: '200px', backgroundColor: '#1e2128', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
