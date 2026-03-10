@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Folder, Film, FileType2, DownloadCloud, Upload, Settings, RefreshCw, X, LayoutGrid, Maximize, Check, Info, FileVideo, Edit, Trash2 } from 'lucide-react'
+import { Folder, Film, FileType2, DownloadCloud, Upload, Settings, RefreshCw, X, LayoutGrid, Maximize, Check, Info, FileVideo, Edit, Trash2, Image as ImageIcon } from 'lucide-react'
 import './styles/globals.css'
 import './styles/components.css'
 import './styles/utilities.css'
@@ -142,6 +142,16 @@ function App() {
       setDownloadingId(asset.id)
       setDownloadProgress(0)
 
+      // If it's an external link for new categories, just open it in browser
+      if (['luts', 'powergrades', 'lr_presets'].includes(asset.category) && asset.file_url?.startsWith('http') && !asset.file_url?.includes('supabase.co')) {
+        if (window.api && window.api.openExternal) {
+          window.api.openExternal(asset.file_url)
+        } else {
+          window.open(asset.file_url, '_blank')
+        }
+        return // Stop execution here, we don't download it internally
+      }
+
       // Get filename from URL or generate from title + type
       const filename = asset.file_url.split('/').pop() || (asset.title.replace(/\s+/g, '_') + asset.type)
 
@@ -194,6 +204,9 @@ function App() {
     { id: 'transitions', name: 'Transitions', icon: <Film size={18} /> },
     { id: 'titles', name: 'Titles & Text', icon: <FileType2 size={18} /> },
     { id: 'effects', name: 'Effects', icon: <DownloadCloud size={18} /> },
+    { id: 'luts', name: 'LUTs', icon: <ImageIcon size={18} /> },
+    { id: 'powergrades', name: 'PowerGrades', icon: <Settings size={18} /> },
+    { id: 'lr_presets', name: 'LR Presets', icon: <ImageIcon size={18} /> },
   ]
 
   // Mock Data for UI Preview removed because we use real data from Supabase now.

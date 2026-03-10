@@ -22,10 +22,20 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
     const [isUploading, setIsUploading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
+    const [externalLink, setExternalLink] = useState(initialData?.file_url?.startsWith('http') && !initialData?.file_url?.includes('supabase.co') ? initialData.file_url : '')
+
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!title || (!assetFile && !initialData)) {
+
+        const isExternalCategory = ['luts', 'powergrades', 'lr_presets'].includes(category)
+
+        if (!title || (!assetFile && !initialData && !isExternalCategory)) {
             setError('Title and Asset File are required')
+            return
+        }
+
+        if (isExternalCategory && !externalLink && !initialData) {
+            setError('External Download Link is required for this category')
             return
         }
 
@@ -144,10 +154,14 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
                 }
             }
 
-            // 1. Upload Asset File
+            // 1. Upload Asset File or Use External Link
             let assetUrl = initialData?.file_url;
-            if (assetFile) {
-                if (initialData?.file_url) await deleteStorageFile(initialData.file_url, 'assets');
+            const isExternalCategory = ['luts', 'powergrades', 'lr_presets'].includes(category)
+
+            if (isExternalCategory && externalLink) {
+                assetUrl = externalLink;
+            } else if (assetFile) {
+                if (initialData?.file_url && initialData.file_url.includes('supabase.co')) await deleteStorageFile(initialData.file_url, 'assets');
                 assetUrl = await uploadFile(assetFile, 'assets')
             }
 
@@ -234,6 +248,9 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
                                 <option value="transitions">Transitions</option>
                                 <option value="titles">Titles & Text</option>
                                 <option value="effects">Effects</option>
+                                <option value="luts">LUTs</option>
+                                <option value="powergrades">PowerGrades</option>
+                                <option value="lr_presets">Lightroom Presets</option>
                             </select>
                         </div>
                         <div style={{ flex: 1 }}>
@@ -242,6 +259,9 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
                                 <option value=".drfx">.drfx (Bundle)</option>
                                 <option value=".setting">.setting (Macro)</option>
                                 <option value=".drp">.drp (Project)</option>
+                                <option value=".cube">.cube (LUT)</option>
+                                <option value=".zip">.zip (Archive)</option>
+                                <option value="link">External Link</option>
                             </select>
                         </div>
                     </div>
@@ -270,15 +290,28 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
                     <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
 
                     <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                        <div style={{ flex: '1 1 100%' }}>
-                            <label>Asset File ({type}) {initialData ? '(Optional)' : '*'}</label>
-                            <input
-                                type="file"
-                                accept={type === '.drfx' ? '.drfx' : type === '.setting' ? '.setting' : '.drp'}
-                                onChange={(e) => setAssetFile(e.target.files?.[0] || null)}
-                                required={!initialData}
-                            />
-                        </div>
+                        {['luts', 'powergrades', 'lr_presets'].includes(category) ? (
+                            <div style={{ flex: '1 1 100%' }}>
+                                <label><LinkIcon size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> External Download Link (Google Drive, Dropbox, etc.) *</label>
+                                <input
+                                    type="url"
+                                    value={externalLink}
+                                    onChange={(e) => setExternalLink(e.target.value)}
+                                    placeholder="https://drive.google.com/..."
+                                    required={!initialData}
+                                />
+                            </div>
+                        ) : (
+                            <div style={{ flex: '1 1 100%' }}>
+                                <label>Asset File ({type}) {initialData ? '(Optional)' : '*'}</label>
+                                <input
+                                    type="file"
+                                    accept={type === '.drfx' ? '.drfx' : type === '.setting' ? '.setting' : '.drp'}
+                                    onChange={(e) => setAssetFile(e.target.files?.[0] || null)}
+                                    required={!initialData}
+                                />
+                            </div>
+                        )}
 
                         <div style={{ flex: 1 }}>
                             <label><ImageIcon size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> Thumbnail Image (Optional)</label>

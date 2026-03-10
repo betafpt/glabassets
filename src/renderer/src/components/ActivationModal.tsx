@@ -185,7 +185,7 @@ export function ActivationModal({ onActivate, onAdminBypass }: ActivationModalPr
                         type="password"
                         placeholder="Developer Passcode..."
                         onChange={(e) => {
-                            if (e.target.value === 'resolveadmin') {
+                            if (e.target.value === 'Bodobede@#12345') {
                                 localStorage.setItem('resolve_is_admin', 'true')
                                 onAdminBypass()
                             }
