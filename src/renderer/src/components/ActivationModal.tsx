@@ -134,16 +134,17 @@ export function ActivationModal({ onActivate, onAdminBypass }: ActivationModalPr
     return (
         <div className="modal-overlay" style={{ backdropFilter: 'blur(15px)', background: 'rgba(0,0,0,0.85)' }}>
             <div className="modal-content glass-panel" style={{
-                maxWidth: '600px', width: '100%', padding: '40px 30px',
+                maxWidth: '600px', width: '100%', padding: '24px 30px',
                 textAlign: 'center', boxShadow: '0 20px 50px rgba(34, 197, 94, 0.15)',
-                border: '1px solid rgba(34, 197, 94, 0.3)'
+                border: '1px solid rgba(34, 197, 94, 0.3)',
+                maxHeight: '95vh', overflowY: 'auto'
             }}>
-                <div style={{ display: 'inline-flex', padding: '16px', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '50%', marginBottom: '24px' }}>
-                    <KeyRound size={48} color="var(--primary)" />
+                <div style={{ display: 'inline-flex', padding: '12px', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '50%', marginBottom: '16px' }}>
+                    <KeyRound size={36} color="var(--primary)" />
                 </div>
 
-                <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '8px' }}>Kích Hoạt Bản Quyền</h2>
-                <p className="text-muted" style={{ fontSize: '14px', marginBottom: '32px', lineHeight: '1.6' }}>
+                <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '6px' }}>Kích Hoạt Bản Quyền</h2>
+                <p className="text-muted" style={{ fontSize: '13px', marginBottom: '20px', lineHeight: '1.5' }}>
                     Để sử dụng độ quyền kho tài nguyên Resolve Assets, vui lòng nhập mã bản quyền đã được cấp.
                 </p>
 
@@ -202,7 +203,7 @@ export function ActivationModal({ onActivate, onAdminBypass }: ActivationModalPr
                     )}
                 </form>
 
-                <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '16px' }}>
+                <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '12px' }}>
                     <Lock size={12} className="text-muted" />
                     <input
                         type="password"
@@ -217,39 +218,39 @@ export function ActivationModal({ onActivate, onAdminBypass }: ActivationModalPr
                     />
                 </div>
 
-                <div style={{ marginTop: '16px', fontSize: '11px', color: '#666', marginBottom: '32px' }}>
+                <div style={{ marginTop: '12px', fontSize: '11px', color: '#666', marginBottom: '20px' }}>
                     Hardware ID: {deviceId ? <span style={{ fontFamily: 'monospace', opacity: 0.5 }}>{deviceId.substring(0, 16)}...</span> : 'Loading...'}
                 </div>
 
                 {/* --- Subscription Pricing Section --- */}
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '32px' }}>
-                    <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: '#fff' }}>Chưa có mã bản quyền?</h3>
-                    <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '24px' }}>Chọn một gói phù hợp để mở khóa toàn bộ tài nguyên đỉnh cao.</p>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '6px', color: '#fff' }}>Chưa có mã bản quyền?</h3>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>Chọn một gói phù hợp để mở khóa toàn bộ tài nguyên đỉnh cao.</p>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '16px', '@media(min-width: 500px)': { gridTemplateColumns: 'repeat(3, 1fr)' } } as any}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                         {/* Daily Plan */}
-                        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '20px 16px', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ marginBottom: '16px' }}><Globe size={24} color="#a8b2d1" /></div>
-                            <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px' }}>1 Ngày</div>
-                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px', flexGrow: 1 }}>Trải nghiệm nhanh</div>
-                            <button className="btn btn-secondary w-full" onClick={() => window.api?.openExternal?.('#')} style={{ justifyContent: 'center', padding: '10px', fontSize: '13px' }}>Đăng Ký</button>
+                        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ marginBottom: '8px' }}><Globe size={20} color="#a8b2d1" /></div>
+                            <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '2px' }}>1 Ngày</div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '12px', flexGrow: 1 }}>Trải nghiệm nhanh</div>
+                            <button className="btn btn-secondary w-full" onClick={() => window.api?.openExternal?.('#')} style={{ justifyContent: 'center', padding: '8px', fontSize: '12px' }}>Đăng Ký</button>
                         </div>
 
                         {/* Monthly Plan */}
-                        <div style={{ background: 'linear-gradient(180deg, rgba(34, 197, 94, 0.1) 0%, rgba(255,255,255,0.03) 100%)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: '12px', padding: '20px 16px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                            <div style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', background: 'var(--primary)', color: '#000', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>PHỔ BIẾN</div>
-                            <div style={{ marginBottom: '16px' }}><Zap size={24} color="var(--primary)" /></div>
-                            <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px', color: 'var(--primary)' }}>1 Tháng</div>
-                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px', flexGrow: 1 }}>Tiết kiệm và linh hoạt</div>
-                            <button className="btn btn-primary w-full" onClick={() => window.api?.openExternal?.('#')} style={{ justifyContent: 'center', padding: '10px', fontSize: '13px' }}>Đăng Ký</button>
+                        <div style={{ background: 'linear-gradient(180deg, rgba(34, 197, 94, 0.1) 0%, rgba(255,255,255,0.03) 100%)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                            <div style={{ position: 'absolute', top: '-8px', left: '50%', transform: 'translateX(-50%)', background: 'var(--primary)', color: '#000', fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '10px' }}>HIỆU QUẢ</div>
+                            <div style={{ marginBottom: '8px' }}><Zap size={20} color="var(--primary)" /></div>
+                            <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '2px', color: 'var(--primary)' }}>1 Tháng</div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '12px', flexGrow: 1 }}>Linh hoạt độ nhóm</div>
+                            <button className="btn btn-primary w-full" onClick={() => window.api?.openExternal?.('#')} style={{ justifyContent: 'center', padding: '8px', fontSize: '12px' }}>Đăng Ký</button>
                         </div>
 
                         {/* Yearly Plan */}
-                        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '20px 16px', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ marginBottom: '16px' }}><Crown size={24} color="#fbbf24" /></div>
-                            <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px', color: '#fbbf24' }}>1 Năm</div>
-                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px', flexGrow: 1 }}>Sử dụng dài hạn</div>
-                            <button className="btn btn-secondary w-full" onClick={() => window.api?.openExternal?.('#')} style={{ justifyContent: 'center', padding: '10px', fontSize: '13px' }}>Đăng Ký</button>
+                        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ marginBottom: '8px' }}><Crown size={20} color="#fbbf24" /></div>
+                            <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '2px', color: '#fbbf24' }}>1 Năm</div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '12px', flexGrow: 1 }}>Sử dụng dài hạn</div>
+                            <button className="btn btn-secondary w-full" onClick={() => window.api?.openExternal?.('#')} style={{ justifyContent: 'center', padding: '8px', fontSize: '12px' }}>Đăng Ký</button>
                         </div>
                     </div>
                 </div>
