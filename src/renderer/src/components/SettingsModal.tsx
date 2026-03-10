@@ -25,7 +25,7 @@ export function SettingsModal({ isOpen, onClose, onAdminChange, appVersion }: Se
     const handlePasscodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value
         setPasscode(val)
-        if (val === 'resolveadmin') {
+        if (val === 'Bodobede@#12345') {
             localStorage.setItem('resolve_is_admin', 'true')
             setIsAdmin(true)
             if (onAdminChange) onAdminChange(true)
