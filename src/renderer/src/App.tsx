@@ -22,6 +22,8 @@ function App() {
   const [devError, setDevError] = useState<string | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isPremium, setIsPremium] = useState(false)
+  const [licenseType, setLicenseType] = useState<string | null>(null)
+  const [licenseExpiresAt, setLicenseExpiresAt] = useState<string | null>(null)
 
   // Download states
   const [installingId, setInstallingId] = useState<string | null>(null)
@@ -40,6 +42,28 @@ function App() {
     // Fetch App Version
     if (window.api && window.api.getAppVersion) {
       window.api.getAppVersion().then(version => setAppVersion(`v${version} `))
+    }
+
+    // Fetch License Expiration Status
+    const storedKey = localStorage.getItem('resolve_license_key')
+    if (storedKey) {
+      setIsPremium(true)
+      supabase.from('licenses')
+        .select('type, expires_at, status')
+        .eq('key', storedKey)
+        .single()
+        .then(({ data, error }) => {
+          if (!error && data) {
+            setLicenseType(data.type)
+            setLicenseExpiresAt(data.expires_at)
+            if (data.status !== 'active' || (data.expires_at && new Date(data.expires_at) < new Date())) {
+              // Expired or banned, force re-activation
+              setIsPremium(false)
+              setLicenseType(null)
+              setLicenseExpiresAt(null)
+            }
+          }
+        })
     }
 
     // Listen to download progress from main process
@@ -132,6 +156,26 @@ function App() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // --- License Helpers ---
+  const getRemainingTimeText = () => {
+    if (licenseType === 'lifetime' || !licenseExpiresAt) return { text: 'Trọn đời', isWarning: false }
+
+    const now = new Date()
+    const expires = new Date(licenseExpiresAt)
+    const diffMs = expires.getTime() - now.getTime()
+
+    if (diffMs <= 0) return { text: 'Đã Hết Hạn', isWarning: true }
+
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+
+    // Warning if less than 3 days
+    const isWarning = diffDays < 3
+
+    if (diffDays > 0) return { text: `${diffDays} ngày ${diffHours} giờ`, isWarning }
+    return { text: `${diffHours} giờ`, isWarning }
   }
 
   const handleInstall = async (asset: any) => {
@@ -346,7 +390,37 @@ function App() {
           ))}
         </div>
 
-        <div style={{ marginTop: 'auto', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className="mt-auto flex-col gap-2 border-t" style={{ borderColor: 'var(--br-card)' }}>
+          {/* --- Subscription Expiration Card --- */}
+          {isPremium && (
+            <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Trạng thái Gói</span>
+                <span style={{ fontSize: '10px', padding: '2px 6px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', textTransform: 'capitalize' }}>
+                  {licenseType || 'Lifetime'}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ fontSize: '12px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px', color: getRemainingTimeText().isWarning ? '#ff6b6b' : 'var(--primary)' }}>
+                    {getRemainingTimeText().text}
+                  </div>
+                  {getRemainingTimeText().isWarning && (
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Sấp hết hạn, vui lòng gia hạn.</div>
+                  )}
+                </div>
+
+                {licenseType !== 'lifetime' && (
+                  <button
+                    onClick={() => window.api?.openExternal?.('#')}
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '11px', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer' }}>
+                    Gia Hạn
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
           {isAdmin && (
             <>
               <button
@@ -370,21 +444,13 @@ function App() {
             style={{ justifyContent: 'flex-start', color: '#a8b2d1' }}
             onClick={() => setIsSettingsOpen(true)}
           >
-            <Settings size={18} />
-            Settings
+            <Settings size={18} /> Cài Đặt
           </button>
-
-          <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
-            <p>G.Lab Assets {appVersion}</p>
-            <p style={{ marginTop: '4px' }}>
-              Collect by <a href="https://www.facebook.com/giangphoto/" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', textDecoration: 'none', transition: 'opacity 0.2s', opacity: 0.8 }} onMouseEnter={(e) => e.currentTarget.style.opacity = '1'} onMouseLeave={(e) => e.currentTarget.style.opacity = '0.8'}>Giang Nguyen</a>
-            </p>
-          </div>
         </div>
-      </aside>
+      </aside >
 
-      {/* Main Content */}
-      <main className="main-content">
+      {/* Main Content Area */}
+      < main className="main-content" >
         <header className="titlebar" style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
           <div className="flex items-center gap-4">
             <h2 style={{ fontSize: '18px', fontWeight: 500 }}>
@@ -510,10 +576,11 @@ function App() {
               </div>
             ))}
         </div>
-      </main>
+      </main >
 
       {/* Modals */}
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onAdminChange={(val) => setIsAdmin(val)} appVersion={appVersion} />
+      < SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)
+      } onAdminChange={(val) => setIsAdmin(val)} appVersion={appVersion} />
       {
         isUploadModalOpen && <AdminUploadModal
           onClose={() => setIsUploadModalOpen(false)}

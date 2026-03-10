@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { KeyRound, Loader2, CheckCircle2, ShieldAlert, Lock } from 'lucide-react'
+import { KeyRound, Loader2, CheckCircle2, ShieldAlert, Lock, Globe, Zap, Crown } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 interface ActivationModalProps {
@@ -134,7 +134,7 @@ export function ActivationModal({ onActivate, onAdminBypass }: ActivationModalPr
     return (
         <div className="modal-overlay" style={{ backdropFilter: 'blur(15px)', background: 'rgba(0,0,0,0.85)' }}>
             <div className="modal-content glass-panel" style={{
-                maxWidth: '430px', width: '100%', padding: '40px 30px',
+                maxWidth: '600px', width: '100%', padding: '40px 30px',
                 textAlign: 'center', boxShadow: '0 20px 50px rgba(34, 197, 94, 0.15)',
                 border: '1px solid rgba(34, 197, 94, 0.3)'
             }}>
@@ -217,8 +217,41 @@ export function ActivationModal({ onActivate, onAdminBypass }: ActivationModalPr
                     />
                 </div>
 
-                <div style={{ marginTop: '16px', fontSize: '11px', color: '#666' }}>
+                <div style={{ marginTop: '16px', fontSize: '11px', color: '#666', marginBottom: '32px' }}>
                     Hardware ID: {deviceId ? <span style={{ fontFamily: 'monospace', opacity: 0.5 }}>{deviceId.substring(0, 16)}...</span> : 'Loading...'}
+                </div>
+
+                {/* --- Subscription Pricing Section --- */}
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '32px' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px', color: '#fff' }}>Chưa có mã bản quyền?</h3>
+                    <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '24px' }}>Chọn một gói phù hợp để mở khóa toàn bộ tài nguyên đỉnh cao.</p>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '16px', '@media(min-width: 500px)': { gridTemplateColumns: 'repeat(3, 1fr)' } } as any}>
+                        {/* Daily Plan */}
+                        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '20px 16px', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ marginBottom: '16px' }}><Globe size={24} color="#a8b2d1" /></div>
+                            <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px' }}>1 Ngày</div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px', flexGrow: 1 }}>Trải nghiệm nhanh</div>
+                            <button className="btn btn-secondary w-full" onClick={() => window.api?.openExternal?.('#')} style={{ justifyContent: 'center', padding: '10px', fontSize: '13px' }}>Đăng Ký</button>
+                        </div>
+
+                        {/* Monthly Plan */}
+                        <div style={{ background: 'linear-gradient(180deg, rgba(34, 197, 94, 0.1) 0%, rgba(255,255,255,0.03) 100%)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: '12px', padding: '20px 16px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                            <div style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', background: 'var(--primary)', color: '#000', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '10px' }}>PHỔ BIẾN</div>
+                            <div style={{ marginBottom: '16px' }}><Zap size={24} color="var(--primary)" /></div>
+                            <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px', color: 'var(--primary)' }}>1 Tháng</div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px', flexGrow: 1 }}>Tiết kiệm và linh hoạt</div>
+                            <button className="btn btn-primary w-full" onClick={() => window.api?.openExternal?.('#')} style={{ justifyContent: 'center', padding: '10px', fontSize: '13px' }}>Đăng Ký</button>
+                        </div>
+
+                        {/* Yearly Plan */}
+                        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '20px 16px', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ marginBottom: '16px' }}><Crown size={24} color="#fbbf24" /></div>
+                            <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px', color: '#fbbf24' }}>1 Năm</div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px', flexGrow: 1 }}>Sử dụng dài hạn</div>
+                            <button className="btn btn-secondary w-full" onClick={() => window.api?.openExternal?.('#')} style={{ justifyContent: 'center', padding: '10px', fontSize: '13px' }}>Đăng Ký</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
