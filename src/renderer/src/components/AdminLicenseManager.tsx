@@ -3,10 +3,13 @@ import { X, Key, Trash2, ShieldAlert, CheckCircle2, Copy } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 interface AdminLicenseManagerProps {
+    isOpen: boolean
     onClose: () => void
 }
 
-export function AdminLicenseManager({ onClose }: AdminLicenseManagerProps) {
+export function AdminLicenseManager({ isOpen, onClose }: AdminLicenseManagerProps) {
+    if (!isOpen) return null
+
     const [licenses, setLicenses] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)

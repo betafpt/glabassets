@@ -5,9 +5,10 @@ import { supabase } from '../lib/supabase'
 interface ActivationModalProps {
     onActivate: (isValid: boolean) => void;
     onAdminBypass: () => void;
+    appSettings?: any;
 }
 
-export function ActivationModal({ onActivate, onAdminBypass }: ActivationModalProps) {
+export function ActivationModal({ onActivate, onAdminBypass, appSettings }: ActivationModalProps) {
     const [licenseKey, setLicenseKey] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -232,8 +233,9 @@ export function ActivationModal({ onActivate, onAdminBypass }: ActivationModalPr
                         <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column' }}>
                             <div style={{ marginBottom: '8px' }}><Globe size={20} color="#a8b2d1" /></div>
                             <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '2px' }}>1 Ngày</div>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'white', marginBottom: '2px' }}>{appSettings?.daily_price || '50.000đ'}</div>
                             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '12px', flexGrow: 1 }}>Trải nghiệm nhanh</div>
-                            <button className="btn btn-secondary w-full" onClick={() => window.api?.openExternal?.('#')} style={{ justifyContent: 'center', padding: '8px', fontSize: '12px' }}>Đăng Ký</button>
+                            <button className="btn btn-secondary w-full" onClick={() => window.api?.openExternal?.(appSettings?.daily_url || '#')} style={{ justifyContent: 'center', padding: '8px', fontSize: '12px' }}>Đăng Ký</button>
                         </div>
 
                         {/* Monthly Plan */}
@@ -241,16 +243,18 @@ export function ActivationModal({ onActivate, onAdminBypass }: ActivationModalPr
                             <div style={{ position: 'absolute', top: '-8px', left: '50%', transform: 'translateX(-50%)', background: 'var(--primary)', color: '#000', fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '10px' }}>HIỆU QUẢ</div>
                             <div style={{ marginBottom: '8px' }}><Zap size={20} color="var(--primary)" /></div>
                             <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '2px', color: 'var(--primary)' }}>1 Tháng</div>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'white', marginBottom: '2px' }}>{appSettings?.monthly_price || '200.000đ'}</div>
                             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '12px', flexGrow: 1 }}>Linh hoạt độ nhóm</div>
-                            <button className="btn btn-primary w-full" onClick={() => window.api?.openExternal?.('#')} style={{ justifyContent: 'center', padding: '8px', fontSize: '12px' }}>Đăng Ký</button>
+                            <button className="btn btn-primary w-full" onClick={() => window.api?.openExternal?.(appSettings?.monthly_url || '#')} style={{ justifyContent: 'center', padding: '8px', fontSize: '12px' }}>Đăng Ký</button>
                         </div>
 
                         {/* Yearly Plan */}
                         <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column' }}>
                             <div style={{ marginBottom: '8px' }}><Crown size={20} color="#fbbf24" /></div>
                             <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '2px', color: '#fbbf24' }}>1 Năm</div>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'white', marginBottom: '2px' }}>{appSettings?.yearly_price || '1.500.000đ'}</div>
                             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '12px', flexGrow: 1 }}>Sử dụng dài hạn</div>
-                            <button className="btn btn-secondary w-full" onClick={() => window.api?.openExternal?.('#')} style={{ justifyContent: 'center', padding: '8px', fontSize: '12px' }}>Đăng Ký</button>
+                            <button className="btn btn-secondary w-full" onClick={() => window.api?.openExternal?.(appSettings?.yearly_url || '#')} style={{ justifyContent: 'center', padding: '8px', fontSize: '12px' }}>Đăng Ký</button>
                         </div>
                     </div>
                 </div>

@@ -11,6 +11,44 @@ export type Json =
 export interface Database {
     public: {
         Tables: {
+            app_settings: {
+                Row: {
+                    id: number
+                    daily_price: string
+                    daily_url: string
+                    monthly_price: string
+                    monthly_url: string
+                    yearly_price: string
+                    yearly_url: string
+                    copyright_text: string
+                    copyright_url: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: number
+                    daily_price?: string
+                    daily_url?: string
+                    monthly_price?: string
+                    monthly_url?: string
+                    yearly_price?: string
+                    yearly_url?: string
+                    copyright_text?: string
+                    copyright_url?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: number
+                    daily_price?: string
+                    daily_url?: string
+                    monthly_price?: string
+                    monthly_url?: string
+                    yearly_price?: string
+                    yearly_url?: string
+                    copyright_text?: string
+                    copyright_url?: string
+                    updated_at?: string
+                }
+            }
             assets: {
                 Row: {
                     id: string

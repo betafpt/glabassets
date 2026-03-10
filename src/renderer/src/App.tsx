@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Folder, Film, FileType2, DownloadCloud, Upload, Settings, RefreshCw, X, LayoutGrid, Maximize, Check, Info, FileVideo, Edit, Trash2, Image as ImageIcon, Puzzle, Loader2, Key } from 'lucide-react'
+import { Folder, Film, FileType2, DownloadCloud, Upload, Settings, RefreshCw, X, LayoutGrid, Maximize, Check, Info, FileVideo, Edit, Trash2, Image as ImageIcon, Puzzle, Loader2, Key, Globe } from 'lucide-react'
 import './styles/globals.css'
 import './styles/components.css'
 import './styles/utilities.css'
 import { SettingsModal } from './components/SettingsModal'
 import { AdminUploadModal } from './components/AdminUploadModal'
 import { AdminLicenseManager } from './components/AdminLicenseManager'
+import { AdminSettingsModal } from './components/AdminSettingsModal'
 import { ActivationModal } from './components/ActivationModal'
 import { supabase } from './lib/supabase'
 
@@ -13,6 +14,7 @@ function App() {
   const [activeCategory, setActiveCategory] = useState('all')
   const [viewMode, setViewMode] = useState<'grid' | 'full'>('grid')
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isAdminSettingsOpen, setIsAdminSettingsOpen] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [isLicenseManagerOpen, setIsLicenseManagerOpen] = useState(false)
   const [editingAsset, setEditingAsset] = useState<any>(null)
@@ -24,6 +26,7 @@ function App() {
   const [isPremium, setIsPremium] = useState(false)
   const [licenseType, setLicenseType] = useState<string | null>(null)
   const [licenseExpiresAt, setLicenseExpiresAt] = useState<string | null>(null)
+  const [appSettings, setAppSettings] = useState<any>(null)
 
   // Download states
   const [installingId, setInstallingId] = useState<string | null>(null)
@@ -38,6 +41,11 @@ function App() {
   useEffect(() => {
     setIsAdmin(localStorage.getItem('resolve_is_admin') === 'true')
     fetchAssets()
+    fetchAppSettings()
+
+    // Listen for custom event when admin updates settings
+    window.addEventListener('app-settings-updated', fetchAppSettings)
+
 
     // Fetch App Version
     if (window.api && window.api.getAppVersion) {
@@ -91,6 +99,7 @@ function App() {
 
     return () => {
       window.electron.ipcRenderer.removeListener('download-progress', downloadProgressListener)
+      window.removeEventListener('app-settings-updated', fetchAppSettings)
     }
   }, [])
 
@@ -155,6 +164,17 @@ function App() {
       setDevError(error?.message || 'Unknown network error occurred.')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  async function fetchAppSettings() {
+    try {
+      const { data, error } = await supabase.from('app_settings').select('*').eq('id', 1).single()
+      if (!error && data) {
+        setAppSettings(data)
+      }
+    } catch (e) {
+      console.error('Error fetching app settings:', e)
     }
   }
 
@@ -260,13 +280,12 @@ function App() {
 
   return (
     <>
-      {!isPremium && !isAdmin && (
+      {/* License Activation Modal */}
+      {(!isPremium && !isAdmin) && !devError && (
         <ActivationModal
-          onActivate={() => setIsPremium(true)}
-          onAdminBypass={() => {
-            setIsAdmin(true)
-            setIsSettingsOpen(true)
-          }}
+          onActivate={(status) => setIsPremium(status)}
+          onAdminBypass={() => setIsAdmin(true)}
+          appSettings={appSettings}
         />
       )}
 
@@ -437,6 +456,13 @@ function App() {
               >
                 <Key size={18} /> Quản Lý License
               </button>
+              <button
+                className="btn btn-ghost w-full"
+                style={{ justifyContent: 'center', border: '1px solid rgba(255,255,255,0.1)' }}
+                onClick={() => setIsAdminSettingsOpen(true)}
+              >
+                <Globe size={18} /> Cấu Hình Ứng Dụng
+              </button>
             </>
           )}
           <button
@@ -576,6 +602,16 @@ function App() {
               </div>
             ))}
         </div>
+        <footer className="p-4 text-center text-muted" style={{ fontSize: '11px', borderTop: '1px solid rgba(255,255,255,0.03)' }}>
+          <div className="flex flex-col items-center justify-center">
+            <p>G.Lab Assets {appVersion}</p>
+            <p style={{ marginTop: '4px' }}>
+              <a href={appSettings?.copyright_url || "https://www.facebook.com/giangphoto/"} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', textDecoration: 'none', transition: 'opacity 0.2s', opacity: 0.8 }} onMouseEnter={(e) => e.currentTarget.style.opacity = '1'} onMouseLeave={(e) => e.currentTarget.style.opacity = '0.8'}>
+                {appSettings?.copyright_text || "Collect by Giang Nguyen"}
+              </a>
+            </p>
+          </div>
+        </footer>
       </main >
 
       {/* Modals */}
@@ -600,11 +636,19 @@ function App() {
           }}
         />
       }
-      {
-        isLicenseManagerOpen && <AdminLicenseManager onClose={() => setIsLicenseManagerOpen(false)} />
-      }
+      {isLicenseManagerOpen && (
+        <AdminLicenseManager
+          isOpen={isLicenseManagerOpen}
+          onClose={() => setIsLicenseManagerOpen(false)}
+        />
+      )}
 
-      {/* Chi Tiết Asset Modal */}
+      <AdminSettingsModal
+        isOpen={isAdminSettingsOpen}
+        onClose={() => setIsAdminSettingsOpen(false)}
+      />
+
+      {/* Settings Modal (User preferences) */}
       {
         selectedAssetDetail && (
           <div className="modal-overlay">
