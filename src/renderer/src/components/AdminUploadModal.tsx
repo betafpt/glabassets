@@ -11,6 +11,9 @@ interface AdminUploadModalProps {
 export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploadModalProps) {
     const [title, setTitle] = useState(initialData?.title || '')
     const [category, setCategory] = useState(initialData?.category || 'transitions')
+    const [downloadMethod, setDownloadMethod] = useState<'auto' | 'link'>(
+        initialData?.file_url?.startsWith('http') && !initialData?.file_url?.includes('supabase.co') ? 'link' : 'auto'
+    )
     const [type, setType] = useState(initialData?.type || '.drfx')
     const [description, setDescription] = useState(initialData?.description || '')
     const [youtubeUrl, setYoutubeUrl] = useState(initialData?.youtube_url || '')
@@ -28,15 +31,13 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        const isExternalCategory = ['luts', 'powergrades', 'lr_presets', 'plugins'].includes(category)
-
-        if (!title || (!assetFile && !initialData && !isExternalCategory)) {
+        if (!title || (downloadMethod === 'auto' && !assetFile && !initialData)) {
             setError('Title and Asset File are required')
             return
         }
 
-        if (isExternalCategory && !externalLink && !initialData) {
-            setError('External Download Link is required for this category')
+        if (downloadMethod === 'link' && !externalLink && !initialData) {
+            setError('External Download Link is required')
             return
         }
 
@@ -157,11 +158,10 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
 
             // 1. Upload Asset File or Use External Link
             let assetUrl = initialData?.file_url;
-            const isExternalCategory = ['luts', 'powergrades', 'lr_presets', 'plugins'].includes(category)
 
-            if (isExternalCategory && externalLink) {
+            if (downloadMethod === 'link' && externalLink) {
                 assetUrl = externalLink;
-            } else if (assetFile) {
+            } else if (downloadMethod === 'auto' && assetFile) {
                 if (initialData?.file_url && initialData.file_url.includes('supabase.co')) await deleteStorageFile(initialData.file_url, 'assets');
                 assetUrl = await uploadFile(assetFile, 'assets')
             }
@@ -265,6 +265,12 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
                                 <option value=".drp">.drp (Project)</option>
                                 <option value=".cube">.cube (LUT)</option>
                                 <option value=".zip">.zip (Archive)</option>
+                            </select>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <label>Download Method</label>
+                            <select value={downloadMethod} onChange={(e: any) => setDownloadMethod(e.target.value)}>
+                                <option value="auto">Auto Install (Upload File)</option>
                                 <option value="link">External Link</option>
                             </select>
                         </div>
@@ -294,7 +300,7 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
                     <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
 
                     <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                        {['luts', 'powergrades', 'lr_presets', 'plugins'].includes(category) ? (
+                        {downloadMethod === 'link' ? (
                             <div style={{ flex: '1 1 100%' }}>
                                 <label><LinkIcon size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> External Download Link (Google Drive, Dropbox, etc.) *</label>
                                 <input

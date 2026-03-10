@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Folder, Film, FileType2, DownloadCloud, Upload, Settings, RefreshCw, X, LayoutGrid, Maximize, Check, Info, FileVideo, Edit, Trash2, Image as ImageIcon, Puzzle } from 'lucide-react'
+import { Folder, Film, FileType2, DownloadCloud, Upload, Settings, RefreshCw, X, LayoutGrid, Maximize, Check, Info, FileVideo, Edit, Trash2, Image as ImageIcon, Puzzle, Loader2 } from 'lucide-react'
 import './styles/globals.css'
 import './styles/components.css'
 import './styles/utilities.css'
@@ -22,7 +22,7 @@ function App() {
   const [isPremium, setIsPremium] = useState(false)
 
   // Download states
-  const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [installingId, setInstallingId] = useState<string | null>(null)
   const [downloadProgress, setDownloadProgress] = useState(0)
 
   // Auto Updater State
@@ -139,11 +139,11 @@ function App() {
     }
 
     try {
-      setDownloadingId(asset.id)
+      setInstallingId(asset.id)
       setDownloadProgress(0)
 
-      // If it's an external link for new categories, just open it in browser
-      if (['luts', 'powergrades', 'lr_presets', 'plugins'].includes(asset.category) && asset.file_url?.startsWith('http') && !asset.file_url?.includes('supabase.co')) {
+      // If it's an external link for any category, just open it in browser
+      if (asset.file_url?.startsWith('http') && !asset.file_url?.includes('supabase.co')) {
         if (window.api && window.api.openExternal) {
           window.api.openExternal(asset.file_url)
         } else {
@@ -162,7 +162,7 @@ function App() {
     } catch (err: any) {
       alert(`❌ Failed to install: \n${err.message || err} `)
     } finally {
-      setDownloadingId(null)
+      setInstallingId(null)
       setDownloadProgress(0)
     }
   }
@@ -474,20 +474,27 @@ function App() {
                   <h3 className="asset-title" onClick={() => setSelectedAssetDetail(asset)} style={{ cursor: 'pointer' }}>{asset.title}</h3>
                   <div className="asset-meta">
                     <span>{asset.type}</span>
-                    <button
-                      className="btn btn-primary"
-                      style={{
-                        padding: '4px 12px',
-                        fontSize: '12px',
-                        opacity: downloadingId === asset.id ? 0.7 : 1,
-                        cursor: downloadingId === asset.id ? 'not-allowed' : 'pointer'
-                      }}
-                      onClick={() => handleInstall(asset)}
-                      disabled={downloadingId !== null}
-                    >
-                      <DownloadCloud size={14} className={downloadingId === asset.id ? 'animate-pulse' : ''} />
-                      {downloadingId === asset.id ? `Downloading ${downloadProgress}%` : 'Install'}
-                    </button>
+                    <div className="asset-actions">
+                      <button
+                        className="btn btn-primary"
+                        style={{
+                          padding: '4px 12px',
+                          fontSize: '12px',
+                          opacity: installingId === asset.id ? 0.7 : 1,
+                          cursor: installingId === asset.id ? 'not-allowed' : 'pointer'
+                        }}
+                        onClick={(e) => { e.stopPropagation(); handleInstall(asset) }}
+                        disabled={installingId === asset.id}
+                      >
+                        {installingId === asset.id ? (
+                          <><Loader2 size={16} className="animate-spin" /> Installing...</>
+                        ) : (
+                          asset.file_url?.startsWith('http') && !asset.file_url.includes('supabase.co') ?
+                            <><DownloadCloud size={16} /> Get Link</> :
+                            <><DownloadCloud size={16} /> Install</>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -589,14 +596,16 @@ function App() {
                   </div>
                   <button
                     className="btn btn-primary"
-                    onClick={() => {
-                      handleInstall(selectedAssetDetail)
-                      setSelectedAssetDetail(null)
-                    }}
-                    disabled={downloadingId !== null}
+                    onClick={(e) => { e.stopPropagation(); handleInstall(selectedAssetDetail) }}
+                    disabled={installingId === selectedAssetDetail.id}
                   >
-                    <DownloadCloud size={16} style={{ display: 'inline', verticalAlign: 'middle' }} />
-                    <span style={{ marginLeft: '6px' }}>{downloadingId === selectedAssetDetail.id ? 'Tải xuống...' : 'Cài Đặt Ngay'}</span>
+                    {installingId === selectedAssetDetail.id ? (
+                      <><Loader2 size={16} className="animate-spin" /> Installing...</>
+                    ) : (
+                      selectedAssetDetail.file_url?.startsWith('http') && !selectedAssetDetail.file_url.includes('supabase.co') ?
+                        <><DownloadCloud size={16} /> Get Link</> :
+                        <><DownloadCloud size={16} /> Install</>
+                    )}
                   </button>
                 </div>
               </div>
