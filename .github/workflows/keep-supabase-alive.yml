@@ -1,0 +1,24 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # Run at 00:00 every Saturday (UTC) which is 07:00 AM every Saturday (Vietnam Time)
+    - cron: '0 0 * * 6'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+    
+jobs:
+  ping_supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Project URL
+        run: |
+          echo "Pinging Supabase to prevent pause due to inactivity..."
+          # Fetch the Supabase URL, adding /auth/v1/health allows checking project health API 
+          # You can also use just the project URL depending on if it has a public index or returns something
+          curl -sS https://tavakxhaptxuttgdalkr.supabase.co > /dev/null
+          
+          # Also, if we know the anon key and a table, we can query it briefly
+          # To keep it simple, just querying the base URL or API health is often enough for Supabase
+          curl -sS https://tavakxhaptxuttgdalkr.supabase.co/rest/v1/ -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" > /dev/null || true
+          
+          echo "Ping complete."
