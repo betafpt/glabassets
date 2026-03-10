@@ -651,8 +651,8 @@ function App() {
       {/* Settings Modal (User preferences) */}
       {
         selectedAssetDetail && (
-          <div className="modal-overlay">
-            <div className="modal-content" style={{ maxWidth: '800px', width: '90%', padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+          <div className="modal-overlay" onClick={() => setSelectedAssetDetail(null)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px', width: '90%', padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
               {/* Media Section - Fixed height or aspect ratio */}
               <div style={{ flexShrink: 0, backgroundColor: '#000' }}>
                 {selectedAssetDetail.youtube_url ? (
@@ -709,7 +709,7 @@ function App() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button className="btn btn-secondary" onClick={() => setSelectedAssetDetail(null)}>
-                      Close
+                      Đóng
                     </button>
                     {isAdmin && (
                       <>
