@@ -654,37 +654,39 @@ function App() {
           <div className="modal-overlay">
             <div className="modal-content" style={{ maxWidth: '800px', width: '90%', padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
               {/* Media Section - Fixed height or aspect ratio */}
-              <div style={{ flexShrink: 0 }}>
+              <div style={{ flexShrink: 0, backgroundColor: '#000' }}>
                 {selectedAssetDetail.youtube_url ? (
-                  <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', backgroundColor: '#000' }}>
-                    <iframe
-                      src={(() => {
-                        try {
-                          const url = selectedAssetDetail.youtube_url;
-                          if (url.includes('embed/')) return url;
-                          const urlObj = new URL(url);
-                          let videoId = '';
-                          if (urlObj.hostname.includes('youtube.com')) {
-                            videoId = urlObj.searchParams.get('v') || '';
-                          } else if (urlObj.hostname.includes('youtu.be')) {
-                            videoId = urlObj.pathname.slice(1);
+                  <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                    <div style={{ position: 'relative', width: '100%', maxWidth: 'calc(40vh * 16 / 9)', aspectRatio: '16 / 9' }}>
+                      <iframe
+                        src={(() => {
+                          try {
+                            const url = selectedAssetDetail.youtube_url;
+                            if (url.includes('embed/')) return url;
+                            const urlObj = new URL(url);
+                            let videoId = '';
+                            if (urlObj.hostname.includes('youtube.com')) {
+                              videoId = urlObj.searchParams.get('v') || '';
+                            } else if (urlObj.hostname.includes('youtu.be')) {
+                              videoId = urlObj.pathname.slice(1);
+                            }
+                            return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?origin=http://localhost` : url.replace('watch?v=', 'embed/');
+                          } catch (e) {
+                            return selectedAssetDetail.youtube_url.replace('watch?v=', 'embed/');
                           }
-                          return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?origin=http://localhost` : url.replace('watch?v=', 'embed/');
-                        } catch (e) {
-                          return selectedAssetDetail.youtube_url.replace('watch?v=', 'embed/');
-                        }
-                      })()}
-                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
+                        })()}
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
                   </div>
                 ) : selectedAssetDetail.video_preview_url ? (
-                  <div style={{ width: '100%', backgroundColor: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {selectedAssetDetail.video_preview_url.match(/\.(gif|jpe?g|png|webp)(\?.*)?$/i) ? (
-                      <img src={selectedAssetDetail.video_preview_url} alt="Preview" style={{ width: '100%', maxHeight: '30vh', objectFit: 'contain' }} />
+                      <img src={selectedAssetDetail.video_preview_url} alt="Preview" style={{ width: '100%', maxHeight: '40vh', objectFit: 'contain' }} />
                     ) : (
-                      <video src={selectedAssetDetail.video_preview_url} controls muted autoPlay style={{ width: '100%', maxHeight: '30vh' }} />
+                      <video src={selectedAssetDetail.video_preview_url} controls muted autoPlay style={{ width: '100%', maxHeight: '40vh' }} />
                     )}
                   </div>
                 ) : (
