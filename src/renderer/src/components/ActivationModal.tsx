@@ -65,6 +65,11 @@ export function ActivationModal({ onActivate, onAdminBypass }: ActivationModalPr
                 throw new Error('Mã kích hoạt này đã bị vô hiệu hóa hoặc thu hồi.')
             }
 
+            // 2.5 Kiểm tra thời hạn
+            if (license.expires_at && new Date(license.expires_at) < new Date()) {
+                throw new Error('Mã kích hoạt này đã hết hạn sử dụng.')
+            }
+
             // 3. Kiểm tra Device ID Bonding
             if (license.device_id) {
                 // Key đã được dùng. Kiểm tra xem có trúng máy này không
@@ -76,9 +81,27 @@ export function ActivationModal({ onActivate, onAdminBypass }: ActivationModalPr
                 }
             } else {
                 // Key chưa từng được kích hoạt. Tiến hành trói chặt cứng với máy này (Claiming)
+                let newExpiresAt: string | null = null;
+                const now = new Date();
+
+                // Fallback to lifetime if type is missing (for older keys)
+                const licenseType = license.type || 'lifetime';
+
+                if (licenseType === 'daily') {
+                    newExpiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+                } else if (licenseType === 'monthly') {
+                    newExpiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+                } else if (licenseType === 'yearly') {
+                    newExpiresAt = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString();
+                }
+
                 const { error: updateError } = await supabase
                     .from('licenses')
-                    .update({ device_id: currentDeviceId })
+                    .update({
+                        device_id: currentDeviceId,
+                        activated_at: now.toISOString(),
+                        expires_at: newExpiresAt
+                    })
                     .eq('key', key)
                     .is('device_id', null) // Double check for race conditions
 

@@ -62,6 +62,8 @@ export interface Database {
                     device_id: string | null
                     status: 'active' | 'revoked'
                     created_at: string
+                    type: 'daily' | 'monthly' | 'yearly' | 'lifetime'
+                    activated_at: string | null
                     expires_at: string | null
                 }
                 Insert: {
@@ -70,6 +72,8 @@ export interface Database {
                     device_id?: string | null
                     status?: 'active' | 'revoked'
                     created_at?: string
+                    type?: 'daily' | 'monthly' | 'yearly' | 'lifetime'
+                    activated_at?: string | null
                     expires_at?: string | null
                 }
                 Update: {
@@ -78,6 +82,8 @@ export interface Database {
                     device_id?: string | null
                     status?: 'active' | 'revoked'
                     created_at?: string
+                    type?: 'daily' | 'monthly' | 'yearly' | 'lifetime'
+                    activated_at?: string | null
                     expires_at?: string | null
                 }
             }

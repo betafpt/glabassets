@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Folder, Film, FileType2, DownloadCloud, Upload, Settings, RefreshCw, X, LayoutGrid, Maximize, Check, Info, FileVideo, Edit, Trash2, Image as ImageIcon, Puzzle, Loader2 } from 'lucide-react'
+import { Folder, Film, FileType2, DownloadCloud, Upload, Settings, RefreshCw, X, LayoutGrid, Maximize, Check, Info, FileVideo, Edit, Trash2, Image as ImageIcon, Puzzle, Loader2, Key } from 'lucide-react'
 import './styles/globals.css'
 import './styles/components.css'
 import './styles/utilities.css'
 import { SettingsModal } from './components/SettingsModal'
 import { AdminUploadModal } from './components/AdminUploadModal'
+import { AdminLicenseManager } from './components/AdminLicenseManager'
 import { ActivationModal } from './components/ActivationModal'
 import { supabase } from './lib/supabase'
 
@@ -13,6 +14,7 @@ function App() {
   const [viewMode, setViewMode] = useState<'grid' | 'full'>('grid')
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
+  const [isLicenseManagerOpen, setIsLicenseManagerOpen] = useState(false)
   const [editingAsset, setEditingAsset] = useState<any>(null)
   const [selectedAssetDetail, setSelectedAssetDetail] = useState<any>(null)
   const [assets, setAssets] = useState<any[]>([])
@@ -344,16 +346,24 @@ function App() {
           ))}
         </div>
 
-        <div className="mt-auto p-4 flex-col gap-2 border-t" style={{ borderColor: 'var(--br-card)' }}>
+        <div style={{ marginTop: 'auto', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {isAdmin && (
-            <button
-              className="btn btn-ghost w-full"
-              style={{ justifyContent: 'flex-start', color: '#a8b2d1' }}
-              onClick={() => setIsUploadModalOpen(true)}
-            >
-              <Upload size={18} />
-              Admin Upload
-            </button>
+            <>
+              <button
+                className="btn btn-primary w-full"
+                style={{ justifyContent: 'center', background: 'var(--primary)', color: 'white' }}
+                onClick={() => setIsUploadModalOpen(true)}
+              >
+                <Upload size={18} /> Upload Admin
+              </button>
+              <button
+                className="btn btn-secondary w-full"
+                style={{ justifyContent: 'center' }}
+                onClick={() => setIsLicenseManagerOpen(true)}
+              >
+                <Key size={18} /> Quản Lý License
+              </button>
+            </>
           )}
           <button
             className="btn btn-ghost w-full"
@@ -522,6 +532,9 @@ function App() {
             fetchAssets()
           }}
         />
+      }
+      {
+        isLicenseManagerOpen && <AdminLicenseManager onClose={() => setIsLicenseManagerOpen(false)} />
       }
 
       {/* Chi Tiết Asset Modal */}
