@@ -704,9 +704,7 @@ function App() {
                   <span style={{ fontSize: '12px', padding: '4px 8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }}>{selectedAssetDetail.type}</span>
                 </div>
 
-                <div style={{ color: '#ccc', lineHeight: '1.6', marginBottom: '24px', whiteSpace: 'pre-wrap' }}>
-                  {selectedAssetDetail.description || 'Chưa có mô tả kỹ thuật.'}
-                </div>
+                <ExpandableDescription text={selectedAssetDetail.description} />
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', gap: '8px' }}>
@@ -744,6 +742,26 @@ function App() {
         )
       }
     </>
+  )
+}
+
+const ExpandableDescription = ({ text }: { text: string }) => {
+  const [expanded, setExpanded] = useState(false);
+  if (!text) return <div style={{ color: '#ccc', lineHeight: '1.6', marginBottom: '24px' }}>Chưa có mô tả kỹ thuật.</div>;
+
+  const maxLength = 150;
+  const shouldTruncate = text.length > maxLength;
+  const displayText = expanded ? text : text.slice(0, maxLength) + (shouldTruncate ? '...' : '');
+
+  return (
+    <div style={{ color: '#ccc', lineHeight: '1.6', marginBottom: '24px', whiteSpace: 'pre-wrap', fontSize: '14px' }}>
+      {displayText}
+      {shouldTruncate && (
+        <button onClick={() => setExpanded(!expanded)} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: 0, marginLeft: '8px', fontSize: '13px', fontWeight: 500, outline: 'none' }}>
+          {expanded ? 'Thu gọn' : 'Đọc tiếp'}
+        </button>
+      )}
+    </div>
   )
 }
 
