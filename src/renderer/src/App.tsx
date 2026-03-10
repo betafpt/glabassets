@@ -30,7 +30,6 @@ function App() {
 
   // Download states
   const [installingId, setInstallingId] = useState<string | null>(null)
-  const [downloadProgress, setDownloadProgress] = useState(0)
 
   // Auto Updater State
   const [updateInfo, setUpdateInfo] = useState<{ type: string; progress?: number; info?: any; error?: string } | null>(null)
@@ -76,7 +75,8 @@ function App() {
 
     // Listen to download progress from main process
     const downloadProgressListener = (_event: any, data: any) => {
-      setDownloadProgress(Math.round(data.progress))
+      // Do nothing since we removed progress UI here to avoid React memory leaks
+      console.log('Download progress', data.progress);
     }
 
     window.electron.ipcRenderer.on('download-progress', downloadProgressListener)
@@ -210,7 +210,6 @@ function App() {
 
     try {
       setInstallingId(asset.id)
-      setDownloadProgress(0)
 
       // If it's an external link for any category, just open it in browser
       if (asset.file_url?.startsWith('http') && !asset.file_url?.includes('supabase.co')) {
@@ -233,7 +232,6 @@ function App() {
       alert(`❌ Failed to install: \n${err.message || err} `)
     } finally {
       setInstallingId(null)
-      setDownloadProgress(0)
     }
   }
 
