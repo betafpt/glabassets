@@ -528,46 +528,50 @@ function App() {
       {
         selectedAssetDetail && (
           <div className="modal-overlay">
-            <div className="modal-content" style={{ maxWidth: '800px', width: '90%', padding: '0', overflow: 'hidden' }}>
-              {selectedAssetDetail.youtube_url ? (
-                <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', backgroundColor: '#000' }}>
-                  <iframe
-                    src={(() => {
-                      try {
-                        const url = selectedAssetDetail.youtube_url;
-                        if (url.includes('embed/')) return url;
-                        const urlObj = new URL(url);
-                        let videoId = '';
-                        if (urlObj.hostname.includes('youtube.com')) {
-                          videoId = urlObj.searchParams.get('v') || '';
-                        } else if (urlObj.hostname.includes('youtu.be')) {
-                          videoId = urlObj.pathname.slice(1);
+            <div className="modal-content" style={{ maxWidth: '800px', width: '90%', padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+              {/* Media Section - Fixed height or aspect ratio */}
+              <div style={{ flexShrink: 0 }}>
+                {selectedAssetDetail.youtube_url ? (
+                  <div style={{ position: 'relative', width: '100%', paddingBottom: '56.25%', backgroundColor: '#000' }}>
+                    <iframe
+                      src={(() => {
+                        try {
+                          const url = selectedAssetDetail.youtube_url;
+                          if (url.includes('embed/')) return url;
+                          const urlObj = new URL(url);
+                          let videoId = '';
+                          if (urlObj.hostname.includes('youtube.com')) {
+                            videoId = urlObj.searchParams.get('v') || '';
+                          } else if (urlObj.hostname.includes('youtu.be')) {
+                            videoId = urlObj.pathname.slice(1);
+                          }
+                          return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?origin=http://localhost` : url.replace('watch?v=', 'embed/');
+                        } catch (e) {
+                          return selectedAssetDetail.youtube_url.replace('watch?v=', 'embed/');
                         }
-                        return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?origin=http://localhost` : url.replace('watch?v=', 'embed/');
-                      } catch (e) {
-                        return selectedAssetDetail.youtube_url.replace('watch?v=', 'embed/');
-                      }
-                    })()}
-                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
-              ) : selectedAssetDetail.video_preview_url ? (
-                <div style={{ width: '100%', backgroundColor: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {selectedAssetDetail.video_preview_url.match(/\.(gif|jpe?g|png|webp)(\?.*)?$/i) ? (
-                    <img src={selectedAssetDetail.video_preview_url} alt="Preview" style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }} />
-                  ) : (
-                    <video src={selectedAssetDetail.video_preview_url} controls muted autoPlay style={{ width: '100%', maxHeight: '400px' }} />
-                  )}
-                </div>
-              ) : (
-                <div style={{ width: '100%', height: '200px', backgroundColor: '#1e2128', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <FileVideo size={64} style={{ opacity: 0.2 }} />
-                </div>
-              )}
+                      })()}
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                ) : selectedAssetDetail.video_preview_url ? (
+                  <div style={{ width: '100%', backgroundColor: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {selectedAssetDetail.video_preview_url.match(/\.(gif|jpe?g|png|webp)(\?.*)?$/i) ? (
+                      <img src={selectedAssetDetail.video_preview_url} alt="Preview" style={{ width: '100%', maxHeight: '30vh', objectFit: 'contain' }} />
+                    ) : (
+                      <video src={selectedAssetDetail.video_preview_url} controls muted autoPlay style={{ width: '100%', maxHeight: '30vh' }} />
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ width: '100%', height: '200px', backgroundColor: '#1e2128', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <FileVideo size={64} style={{ opacity: 0.2 }} />
+                  </div>
+                )}
+              </div>
 
-              <div style={{ padding: '24px' }}>
+              {/* Scrollable Content Section */}
+              <div style={{ padding: '24px', overflowY: 'auto', flexGrow: 1 }}>
                 <h2 style={{ fontSize: '24px', marginBottom: '8px' }}>{selectedAssetDetail.title}</h2>
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
                   <span style={{ fontSize: '12px', padding: '4px 8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }}>{selectedAssetDetail.category}</span>
