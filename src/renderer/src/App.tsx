@@ -672,7 +672,7 @@ function App() {
                             } else if (urlObj.hostname.includes('youtu.be')) {
                               videoId = urlObj.pathname.slice(1);
                             }
-                            return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?origin=http://localhost` : url.replace('watch?v=', 'embed/');
+                            return videoId ? `https://www.youtube.com/embed/${videoId}` : url.replace('watch?v=', 'embed/');
                           } catch (e) {
                             return selectedAssetDetail.youtube_url.replace('watch?v=', 'embed/');
                           }
