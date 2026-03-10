@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Folder, Film, FileType2, DownloadCloud, Upload, Settings, RefreshCw, X, LayoutGrid, Maximize, Check, Info, FileVideo, Edit, Trash2, Image as ImageIcon } from 'lucide-react'
+import { Folder, Film, FileType2, DownloadCloud, Upload, Settings, RefreshCw, X, LayoutGrid, Maximize, Check, Info, FileVideo, Edit, Trash2, Image as ImageIcon, Puzzle } from 'lucide-react'
 import './styles/globals.css'
 import './styles/components.css'
 import './styles/utilities.css'
@@ -143,7 +143,7 @@ function App() {
       setDownloadProgress(0)
 
       // If it's an external link for new categories, just open it in browser
-      if (['luts', 'powergrades', 'lr_presets'].includes(asset.category) && asset.file_url?.startsWith('http') && !asset.file_url?.includes('supabase.co')) {
+      if (['luts', 'powergrades', 'lr_presets', 'plugins'].includes(asset.category) && asset.file_url?.startsWith('http') && !asset.file_url?.includes('supabase.co')) {
         if (window.api && window.api.openExternal) {
           window.api.openExternal(asset.file_url)
         } else {
@@ -207,6 +207,7 @@ function App() {
     { id: 'luts', name: 'LUTs', icon: <ImageIcon size={18} /> },
     { id: 'powergrades', name: 'PowerGrades', icon: <Settings size={18} /> },
     { id: 'lr_presets', name: 'LR Presets', icon: <ImageIcon size={18} /> },
+    { id: 'plugins', name: 'Plugins', icon: <Puzzle size={18} /> },
   ]
 
   // Mock Data for UI Preview removed because we use real data from Supabase now.

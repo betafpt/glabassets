@@ -27,7 +27,7 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        const isExternalCategory = ['luts', 'powergrades', 'lr_presets'].includes(category)
+        const isExternalCategory = ['luts', 'powergrades', 'lr_presets', 'plugins'].includes(category)
 
         if (!title || (!assetFile && !initialData && !isExternalCategory)) {
             setError('Title and Asset File are required')
@@ -156,7 +156,7 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
 
             // 1. Upload Asset File or Use External Link
             let assetUrl = initialData?.file_url;
-            const isExternalCategory = ['luts', 'powergrades', 'lr_presets'].includes(category)
+            const isExternalCategory = ['luts', 'powergrades', 'lr_presets', 'plugins'].includes(category)
 
             if (isExternalCategory && externalLink) {
                 assetUrl = externalLink;
@@ -251,6 +251,7 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
                                 <option value="luts">LUTs</option>
                                 <option value="powergrades">PowerGrades</option>
                                 <option value="lr_presets">Lightroom Presets</option>
+                                <option value="plugins">Plugins</option>
                             </select>
                         </div>
                         <div style={{ flex: 1 }}>
@@ -290,7 +291,7 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
                     <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)' }} />
 
                     <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                        {['luts', 'powergrades', 'lr_presets'].includes(category) ? (
+                        {['luts', 'powergrades', 'lr_presets', 'plugins'].includes(category) ? (
                             <div style={{ flex: '1 1 100%' }}>
                                 <label><LinkIcon size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> External Download Link (Google Drive, Dropbox, etc.) *</label>
                                 <input
