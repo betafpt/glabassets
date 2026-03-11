@@ -76,9 +76,9 @@ app.whenReady().then(() => {
         // Đường dẫn chuẩn cho DaVinci Resolve tuỳ thuộc Hệ Điều Hành
         let basePath = ''
         if (process.platform === 'win32') {
-          // Trên Windows, thư mục dùng chung nằm ở ProgramData
-          const programData = process.env.PROGRAMDATA || 'C:\\ProgramData'
-          basePath = join(programData, 'Blackmagic Design', 'DaVinci Resolve', 'Support', 'Fusion', 'Templates')
+        // Trên Windows, thư mục cài cá nhân chuẩn nằm ở AppData/Roaming để không yêu cầu quyền Admin
+        const appData = process.env.APPDATA || join(os.homedir(), 'AppData', 'Roaming')
+        basePath = join(appData, 'Blackmagic Design', 'DaVinci Resolve', 'Support', 'Fusion', 'Templates')
         } else if (process.platform === 'darwin') {
           // Trên macOS
           basePath = join(os.homedir(), 'Library', 'Application Support', 'Blackmagic Design', 'DaVinci Resolve', 'Support', 'Fusion', 'Templates')
@@ -141,8 +141,8 @@ app.whenReady().then(() => {
     try {
       let basePath = ''
       if (process.platform === 'win32') {
-        const programData = process.env.PROGRAMDATA || 'C:\\ProgramData'
-        basePath = join(programData, 'Blackmagic Design', 'DaVinci Resolve', 'Support', 'Fusion', 'Templates')
+        const appData = process.env.APPDATA || join(os.homedir(), 'AppData', 'Roaming')
+        basePath = join(appData, 'Blackmagic Design', 'DaVinci Resolve', 'Support', 'Fusion', 'Templates')
       } else if (process.platform === 'darwin') {
         basePath = join(os.homedir(), 'Library', 'Application Support', 'Blackmagic Design', 'DaVinci Resolve', 'Support', 'Fusion', 'Templates')
       } else {
