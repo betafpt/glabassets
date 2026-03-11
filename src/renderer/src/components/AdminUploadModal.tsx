@@ -20,6 +20,7 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
 
     const [assetFile, setAssetFile] = useState<File | null>(null)
     const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
+    const [thumbnailLink, setThumbnailLink] = useState(initialData?.thumbnail_url?.startsWith('http') && !initialData?.thumbnail_url?.includes('supabase.co') ? initialData.thumbnail_url : '')
     const [videoFile, setVideoFile] = useState<File | null>(null)
     const [previewVideoLink, setPreviewVideoLink] = useState(initialData?.video_preview_url?.startsWith('http') && !initialData?.video_preview_url?.includes('supabase.co') ? initialData.video_preview_url : '')
 
@@ -168,8 +169,10 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
 
             // 2. Upload Thumbnail (Optional) with compression
             let thumbnailUrl: string | null = initialData?.thumbnail_url || null
-            if (thumbnailFile) {
-                if (initialData?.thumbnail_url) await deleteStorageFile(initialData.thumbnail_url, 'thumbnails');
+            if (thumbnailLink) {
+                thumbnailUrl = thumbnailLink
+            } else if (thumbnailFile) {
+                if (initialData?.thumbnail_url && initialData.thumbnail_url.includes('supabase.co')) await deleteStorageFile(initialData.thumbnail_url, 'thumbnails');
                 const compressedFile = await compressImage(thumbnailFile, 500);
                 thumbnailUrl = await uploadFile(compressedFile, 'thumbnails')
             }
@@ -323,12 +326,21 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
                             </div>
                         )}
 
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <label><ImageIcon size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> Thumbnail Image (Optional)</label>
+                            <input
+                                type="url"
+                                value={thumbnailLink}
+                                onChange={(e) => setThumbnailLink(e.target.value)}
+                                placeholder="External Link"
+                                style={{ marginBottom: '8px' }}
+                            />
+                            <div style={{ textAlign: 'center', fontSize: '12px', color: '#666' }}>— OR —</div>
                             <input
                                 type="file"
                                 accept="image/*"
                                 onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
+                                disabled={!!thumbnailLink}
                             />
                         </div>
 

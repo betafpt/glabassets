@@ -10,6 +10,29 @@ import { AdminSettingsModal } from './components/AdminSettingsModal'
 import { ActivationModal } from './components/ActivationModal'
 import { supabase } from './lib/supabase'
 
+export const getDirectMediaUrl = (url?: string | null) => {
+  if (!url) return '';
+  try {
+    let directUrl = url;
+
+    if (url.includes('drive.google.com')) {
+      const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+      if (match) directUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+    } else if (url.includes('dropbox.com')) {
+      directUrl = url.replace('www.dropbox.com', 'dl.dropboxusercontent.com').replace('?dl=0', '');
+    } else if (url.includes('imgur.com') && !url.includes('i.imgur.com')) {
+      const parts = url.split('/');
+      const id = parts[parts.length - 1];
+      if (id && !id.includes('.')) directUrl = `https://i.imgur.com/${id}.jpg`;
+    }
+
+    return directUrl;
+  } catch (e) {
+    return url;
+  }
+}
+
+
 function App() {
   const [activeCategory, setActiveCategory] = useState('all')
   const [viewMode, setViewMode] = useState<'grid' | 'full'>('grid')
@@ -535,9 +558,10 @@ function App() {
                 >
                   {asset.thumbnail_url ? (
                     <img
-                      src={asset.thumbnail_url}
+                      src={getDirectMediaUrl(asset.thumbnail_url)}
                       alt={asset.title}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.removeAttribute('style'); }}
                     />
                   ) : (
                     <div className="absolute-center w-full h-full flex items-center justify-center" style={{ background: '#1e2128' }}>
@@ -548,16 +572,16 @@ function App() {
                   )}
                   {/* Video block if url exists */}
                   {asset.video_preview_url && (
-                    asset.video_preview_url.match(/\.(gif|jpe?g|png|webp)(\?.*)?$/i) ? (
+                    getDirectMediaUrl(asset.video_preview_url).match(/\.(gif|jpe?g|png|webp)(\?.*)?$/i) ? (
                       <img
-                        src={asset.video_preview_url}
+                        src={getDirectMediaUrl(asset.video_preview_url)}
                         alt="Preview"
                         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1 }}
                       />
                     ) : (
                       <video
                         className="asset-video"
-                        src={asset.video_preview_url}
+                        src={getDirectMediaUrl(asset.video_preview_url)}
                         muted
                         loop
                         playsInline
@@ -685,10 +709,10 @@ function App() {
                   </div>
                 ) : selectedAssetDetail.video_preview_url ? (
                   <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {selectedAssetDetail.video_preview_url.match(/\.(gif|jpe?g|png|webp)(\?.*)?$/i) ? (
-                      <img src={selectedAssetDetail.video_preview_url} alt="Preview" style={{ width: '100%', maxHeight: '40vh', objectFit: 'contain' }} />
+                    {getDirectMediaUrl(selectedAssetDetail.video_preview_url).match(/\.(gif|jpe?g|png|webp)(\?.*)?$/i) ? (
+                      <img src={getDirectMediaUrl(selectedAssetDetail.video_preview_url)} alt="Preview" style={{ width: '100%', maxHeight: '40vh', objectFit: 'contain' }} />
                     ) : (
-                      <video src={selectedAssetDetail.video_preview_url} controls muted autoPlay style={{ width: '100%', maxHeight: '40vh' }} />
+                      <video src={getDirectMediaUrl(selectedAssetDetail.video_preview_url)} controls muted autoPlay style={{ width: '100%', maxHeight: '40vh' }} />
                     )}
                   </div>
                 ) : (
