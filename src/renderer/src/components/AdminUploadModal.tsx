@@ -48,8 +48,8 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
 
             // Helper function to upload file to Supabase Storage
             const uploadFile = async (file: File, folder: string) => {
-                const fileExt = file.name.split('.').pop()
-                const fileName = `${folder}/${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`
+                const sanitizedName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')
+                const fileName = `${folder}/${Math.random().toString(36).substring(2, 15)}_${Date.now()}/${sanitizedName}`
                 const { error: uploadError } = await supabase.storage
                     .from('resolve-assets')
                     .upload(fileName, file)
