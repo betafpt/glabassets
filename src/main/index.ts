@@ -73,18 +73,23 @@ app.whenReady().then(() => {
   ipcMain.handle('download-asset', async (event, url: string, filename: string) => {
     return new Promise((resolve, reject) => {
       try {
-        // Đường dẫn chuẩn cho DaVinci Resolve tuỳ thuộc Hệ Điều Hành
+        // Phân loại cách xử lý dựa theo đuôi file
+        const isDrfx = filename.toLowerCase().endsWith('.drfx');
+        
         let basePath = ''
-        if (process.platform === 'win32') {
-        // Trên Windows, thư mục cài cá nhân chuẩn nằm ở AppData/Roaming để không yêu cầu quyền Admin
-        const appData = process.env.APPDATA || join(os.homedir(), 'AppData', 'Roaming')
-        basePath = join(appData, 'Blackmagic Design', 'DaVinci Resolve', 'Support', 'Fusion', 'Templates')
-        } else if (process.platform === 'darwin') {
-          // Trên macOS
-          basePath = join(os.homedir(), 'Library', 'Application Support', 'Blackmagic Design', 'DaVinci Resolve', 'Support', 'Fusion', 'Templates')
+        if (isDrfx) {
+          // Drfx files should be downloaded to a temp folder and then "executed" (double-clicked)
+          basePath = join(os.tmpdir(), 'GlabAssets_Temp')
         } else {
-          // Fallback Linux (nếu có dùng)
-          basePath = join(os.homedir(), '.local', 'share', 'DaVinciResolve', 'Fusion', 'Templates')
+          // Các file template khác (.setting, etc) chép thẳng vào thư mục cài đặt
+          if (process.platform === 'win32') {
+            const appData = process.env.APPDATA || join(os.homedir(), 'AppData', 'Roaming')
+            basePath = join(appData, 'Blackmagic Design', 'DaVinci Resolve', 'Support', 'Fusion', 'Templates')
+          } else if (process.platform === 'darwin') {
+            basePath = join(os.homedir(), 'Library', 'Application Support', 'Blackmagic Design', 'DaVinci Resolve', 'Support', 'Fusion', 'Templates')
+          } else {
+            basePath = join(os.homedir(), '.local', 'share', 'DaVinciResolve', 'Fusion', 'Templates')
+          }
         }
 
         // Tạo thư mục nếu máy chưa có
@@ -118,8 +123,12 @@ app.whenReady().then(() => {
             }
           })
 
-          response.on('end', () => {
+          response.on('end', async () => {
             file.end()
+            if (isDrfx) {
+              // Tự động mở file .drfx để phần mềm kích hoạt cài đặt
+              await shell.openPath(filePath)
+            }
             resolve(filePath)
           })
         })
@@ -149,6 +158,15 @@ app.whenReady().then(() => {
         basePath = join(os.homedir(), '.local', 'share', 'DaVinciResolve', 'Fusion', 'Templates')
       }
       
+      const isDrfx = filename.toLowerCase().endsWith('.drfx');
+      if (isDrfx) {
+         // DaVinci Resolve automatically extracts .drfx files into a folder with the same name (minus the .drfx) or
+         // simply leaves the file itself under the Template directory in newer versions.
+         // We check if either the .drfx file or the extracted folder exists in the DaVinci templates path
+         const extractedFolderName = filename.substring(0, filename.lastIndexOf('.'))
+         return fs.existsSync(join(basePath, filename)) || fs.existsSync(join(basePath, extractedFolderName))
+      }
+
       const filePath = join(basePath, filename)
       return fs.existsSync(filePath)
     } catch (e) {
