@@ -10,6 +10,7 @@ declare global {
       quitAndInstall: () => Promise<void>,
       checkForUpdates: () => Promise<void>,
       openExternal: (url: string) => Promise<void>,
+      checkAssetExists: (filename: string) => Promise<boolean>,
       onUpdaterMessage: (callback: (data: any) => void) => () => void
     }
   }

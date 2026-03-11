@@ -53,6 +53,7 @@ function App() {
 
   // Download states
   const [installingId, setInstallingId] = useState<string | null>(null)
+  const [installedAssets, setInstalledAssets] = useState<Record<string, boolean>>({})
 
   // Auto Updater State
   const [updateInfo, setUpdateInfo] = useState<{ type: string; progress?: number; info?: any; error?: string } | null>(null)
@@ -64,6 +65,7 @@ function App() {
     setIsAdmin(localStorage.getItem('resolve_is_admin') === 'true')
     fetchAssets()
     fetchAppSettings()
+    fetchLicenseStatus()
 
     // Listen for custom event when admin updates settings
     window.addEventListener('app-settings-updated', fetchAppSettings)
@@ -72,28 +74,6 @@ function App() {
     // Fetch App Version
     if (window.api && window.api.getAppVersion) {
       window.api.getAppVersion().then(version => setAppVersion(`v${version} `))
-    }
-
-    // Fetch License Expiration Status
-    const storedKey = localStorage.getItem('resolve_license_key')
-    if (storedKey) {
-      setIsPremium(true)
-      supabase.from('licenses')
-        .select('type, expires_at, status')
-        .eq('key', storedKey)
-        .single()
-        .then(({ data, error }) => {
-          if (!error && data) {
-            setLicenseType(data.type)
-            setLicenseExpiresAt(data.expires_at)
-            if (data.status !== 'active' || (data.expires_at && new Date(data.expires_at) < new Date())) {
-              // Expired or banned, force re-activation
-              setIsPremium(false)
-              setLicenseType(null)
-              setLicenseExpiresAt(null)
-            }
-          }
-        })
     }
 
     // Listen to download progress from main process
@@ -185,7 +165,24 @@ function App() {
         console.error('Supabase Query Error:', error)
         setDevError(error.message || JSON.stringify(error))
       }
-      if (data) setAssets(data)
+      if (data) {
+        setAssets(data)
+        // Check local installation status for all fetched assets
+        if (window.api && window.api.checkAssetExists) {
+          const installedStatus: Record<string, boolean> = {}
+          for (const asset of data) {
+            if (asset.file_url) {
+               // Only check if it's not an external link
+               if (asset.file_url.includes('supabase.co')) {
+                  const filename = asset.file_url.split('/').pop() || (asset.title.replace(/\s+/g, '_') + asset.type)
+                  const exists = await window.api.checkAssetExists(filename)
+                  installedStatus[asset.id] = exists
+               }
+            }
+          }
+          setInstalledAssets(installedStatus)
+        }
+      }
     } catch (error: any) {
       console.error('Error fetching assets:', error)
       setDevError(error?.message || 'Unknown network error occurred.')
@@ -202,6 +199,32 @@ function App() {
       }
     } catch (e) {
       console.error('Error fetching app settings:', e)
+    }
+  }
+
+  async function fetchLicenseStatus() {
+    const storedKey = localStorage.getItem('resolve_license_key')
+    if (storedKey) {
+      setIsPremium(true)
+      try {
+        const { data, error } = await supabase.from('licenses')
+          .select('type, expires_at, status')
+          .eq('key', storedKey)
+          .single()
+        
+        if (!error && data) {
+          setLicenseType(data.type)
+          setLicenseExpiresAt(data.expires_at)
+          if (data.status !== 'active' || (data.expires_at && new Date(data.expires_at) < new Date())) {
+            // Expired or banned, force re-activation
+            setIsPremium(false)
+            setLicenseType(null)
+            setLicenseExpiresAt(null)
+          }
+        }
+      } catch (e) {
+        console.error('Error fetching license status:', e)
+      }
     }
   }
 
@@ -248,6 +271,9 @@ function App() {
       const filename = asset.file_url.split('/').pop() || (asset.title.replace(/\s+/g, '_') + asset.type)
 
       const savedPath = await window.api.downloadAsset(asset.file_url, filename)
+
+      // Mark as installed
+      setInstalledAssets(prev => ({ ...prev, [asset.id]: true }))
 
       // We can use a custom toast instead in the future, for now alert is enough to debug
       alert(`🎉 Installed successfully at: \n${savedPath} `)
@@ -308,7 +334,10 @@ function App() {
       {/* License Activation Modal */}
       {(!isPremium && !isAdmin) && !devError && (
         <ActivationModal
-          onActivate={(status) => setIsPremium(status)}
+          onActivate={(status) => {
+            setIsPremium(status);
+            if (status) fetchLicenseStatus();
+          }}
           onAdminBypass={() => setIsAdmin(true)}
           appSettings={appSettings}
         />
@@ -609,13 +638,18 @@ function App() {
                           padding: '4px 12px',
                           fontSize: '12px',
                           opacity: installingId === asset.id ? 0.7 : 1,
-                          cursor: installingId === asset.id ? 'not-allowed' : 'pointer'
+                          cursor: installingId === asset.id ? 'not-allowed' : 'pointer',
+                          background: installedAssets[asset.id] ? 'rgba(255,255,255,0.1)' : 'var(--primary)',
+                          color: installedAssets[asset.id] ? '#a8b2d1' : '#000',
+                          border: installedAssets[asset.id] ? '1px solid rgba(255,255,255,0.2)' : 'none'
                         }}
                         onClick={(e) => { e.stopPropagation(); handleInstall(asset) }}
                         disabled={installingId === asset.id}
                       >
                         {installingId === asset.id ? (
                           <><Loader2 size={16} className="animate-spin" /> Installing...</>
+                        ) : installedAssets[asset.id] ? (
+                          <><RefreshCw size={14} /> Reinstall</>
                         ) : (
                           asset.file_url?.startsWith('http') && !asset.file_url.includes('supabase.co') ?
                             <><DownloadCloud size={16} /> Get Link</> :
@@ -750,11 +784,18 @@ function App() {
                   </div>
                   <button
                     className="btn btn-primary"
+                    style={{
+                       background: installedAssets[selectedAssetDetail.id] ? 'rgba(255,255,255,0.1)' : 'var(--primary)',
+                       color: installedAssets[selectedAssetDetail.id] ? '#a8b2d1' : '#000',
+                       border: installedAssets[selectedAssetDetail.id] ? '1px solid rgba(255,255,255,0.2)' : 'none'
+                    }}
                     onClick={(e) => { e.stopPropagation(); handleInstall(selectedAssetDetail) }}
                     disabled={installingId === selectedAssetDetail.id}
                   >
                     {installingId === selectedAssetDetail.id ? (
                       <><Loader2 size={16} className="animate-spin" /> Installing...</>
+                    ) : installedAssets[selectedAssetDetail.id] ? (
+                      <><RefreshCw size={16} /> Reinstall</>
                     ) : (
                       selectedAssetDetail.file_url?.startsWith('http') && !selectedAssetDetail.file_url.includes('supabase.co') ?
                         <><DownloadCloud size={16} /> Get Link</> :

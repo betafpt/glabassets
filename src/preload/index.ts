@@ -9,6 +9,7 @@ const api = {
   quitAndInstall: () => ipcRenderer.invoke('quit-and-install'),
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
+  checkAssetExists: (filename: string) => ipcRenderer.invoke('check-asset-exists', filename),
   onUpdaterMessage: (callback: (data: any) => void) => {
     ipcRenderer.on('updater-message', (_event, data) => callback(data))
     return () => ipcRenderer.removeAllListeners('updater-message')

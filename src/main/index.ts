@@ -73,8 +73,19 @@ app.whenReady().then(() => {
   ipcMain.handle('download-asset', async (event, url: string, filename: string) => {
     return new Promise((resolve, reject) => {
       try {
-        // Đường dẫn chuẩn của Mac OS cho DaVinci Resolve
-        const basePath = join(os.homedir(), 'Library', 'Application Support', 'Blackmagic Design', 'DaVinci Resolve', 'Support', 'Fusion', 'Templates')
+        // Đường dẫn chuẩn cho DaVinci Resolve tuỳ thuộc Hệ Điều Hành
+        let basePath = ''
+        if (process.platform === 'win32') {
+          // Trên Windows, thư mục dùng chung nằm ở ProgramData
+          const programData = process.env.PROGRAMDATA || 'C:\\ProgramData'
+          basePath = join(programData, 'Blackmagic Design', 'DaVinci Resolve', 'Support', 'Fusion', 'Templates')
+        } else if (process.platform === 'darwin') {
+          // Trên macOS
+          basePath = join(os.homedir(), 'Library', 'Application Support', 'Blackmagic Design', 'DaVinci Resolve', 'Support', 'Fusion', 'Templates')
+        } else {
+          // Fallback Linux (nếu có dùng)
+          basePath = join(os.homedir(), '.local', 'share', 'DaVinciResolve', 'Fusion', 'Templates')
+        }
 
         // Tạo thư mục nếu máy chưa có
         if (!fs.existsSync(basePath)) {
@@ -124,6 +135,25 @@ app.whenReady().then(() => {
         reject(err)
       }
     })
+  })
+
+  ipcMain.handle('check-asset-exists', (_event, filename: string) => {
+    try {
+      let basePath = ''
+      if (process.platform === 'win32') {
+        const programData = process.env.PROGRAMDATA || 'C:\\ProgramData'
+        basePath = join(programData, 'Blackmagic Design', 'DaVinci Resolve', 'Support', 'Fusion', 'Templates')
+      } else if (process.platform === 'darwin') {
+        basePath = join(os.homedir(), 'Library', 'Application Support', 'Blackmagic Design', 'DaVinci Resolve', 'Support', 'Fusion', 'Templates')
+      } else {
+        basePath = join(os.homedir(), '.local', 'share', 'DaVinciResolve', 'Fusion', 'Templates')
+      }
+      
+      const filePath = join(basePath, filename)
+      return fs.existsSync(filePath)
+    } catch (e) {
+      return false
+    }
   })
 
   createWindow()
