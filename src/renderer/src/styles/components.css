@@ -151,8 +151,12 @@
     opacity: 1;
 }
 
-.asset-card:hover .asset-thumbnail {
+.asset-card.has-video:hover .asset-thumbnail {
     opacity: 0;
+}
+
+.asset-video.always-visible {
+    opacity: 1 !important;
 }
 
 .asset-info {

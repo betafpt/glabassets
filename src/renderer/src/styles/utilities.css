@@ -1,4 +1,7 @@
 /* Utility Classes */
+.hidden-error {
+    display: none !important;
+}
 
 .absolute-center {
     position: absolute;

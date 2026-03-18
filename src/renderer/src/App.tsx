@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Folder, Film, FileType2, DownloadCloud, Upload, Settings, RefreshCw, X, LayoutGrid, Maximize, Check, Info, FileVideo, Edit, Trash2, Image as ImageIcon, Puzzle, Loader2, Key, Globe } from 'lucide-react'
+import { Folder, Film, FileType2, DownloadCloud, Upload, Settings, RefreshCw, X, LayoutGrid, Maximize, Check, Info, FileVideo, Edit, Trash2, Image as ImageIcon, Puzzle, Loader2, Key, Globe, Layers } from 'lucide-react'
 import './styles/globals.css'
 import './styles/components.css'
 import './styles/utilities.css'
@@ -321,6 +321,7 @@ function App() {
     { id: 'transitions', name: 'Transitions', icon: <Film size={18} /> },
     { id: 'titles', name: 'Titles & Text', icon: <FileType2 size={18} /> },
     { id: 'effects', name: 'Effects', icon: <DownloadCloud size={18} /> },
+    { id: 'overlays', name: 'Overlays', icon: <Layers size={18} /> },
     { id: 'luts', name: 'LUTs', icon: <ImageIcon size={18} /> },
     { id: 'powergrades', name: 'PowerGrades', icon: <Settings size={18} /> },
     { id: 'lr_presets', name: 'LR Presets', icon: <ImageIcon size={18} /> },
@@ -579,37 +580,44 @@ function App() {
           ) : assets
             .filter(asset => activeCategory === 'all' || asset.category === activeCategory)
             .map(asset => (
-              <div key={asset.id} className="asset-card glass-panel">
+              <div key={asset.id} className={`asset-card glass-panel ${asset.video_preview_url ? 'has-video' : ''}`}>
                 <div
                   className="asset-thumbnail-container"
                   onClick={() => setSelectedAssetDetail(asset)}
                   style={{ cursor: 'pointer', position: 'relative' }}
                 >
-                  {asset.thumbnail_url ? (
-                    <img
-                      src={getDirectMediaUrl(asset.thumbnail_url)}
-                      alt={asset.title}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.removeAttribute('style'); }}
-                    />
-                  ) : (
-                    <div className="absolute-center w-full h-full flex items-center justify-center" style={{ background: '#1e2128' }}>
+                  {/* 1. Fallback Icon (Bottom Layer Z: 0) */}
+                  <div className="w-full h-full flex items-center justify-center fallback-icon" style={{ background: '#1e2128', position: 'absolute', top: 0, left: 0, zIndex: 0 }}>
                       {asset.category === 'transitions' ? <Film size={32} opacity={0.2} /> :
                         asset.category === 'titles' ? <FileType2 size={32} opacity={0.2} /> :
-                          <DownloadCloud size={32} opacity={0.2} />}
-                    </div>
+                          asset.category === 'overlays' ? <Layers size={32} opacity={0.2} /> :
+                            <DownloadCloud size={32} opacity={0.2} />}
+                  </div>
+
+                  {/* 2. Thumbnail Image (Middle Layer Z: 1) */}
+                  {asset.thumbnail_url && (
+                    <img
+                      className="asset-thumbnail"
+                      src={getDirectMediaUrl(asset.thumbnail_url)}
+                      alt={asset.title}
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1 }}
+                      onError={(e) => { e.currentTarget.classList.add('hidden-error'); }}
+                    />
                   )}
-                  {/* Video block if url exists */}
+
+                  {/* 3. Video / Animated GIF Preview (Top Layer Z: 2) */}
                   {asset.video_preview_url && (
                     getDirectMediaUrl(asset.video_preview_url).match(/\.(gif|jpe?g|png|webp)(\?.*)?$/i) ? (
                       <img
+                        className={`asset-video ${!asset.thumbnail_url ? 'always-visible' : ''}`}
                         src={getDirectMediaUrl(asset.video_preview_url)}
                         alt="Preview"
-                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1 }}
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 2 }}
+                        onError={(e) => { e.currentTarget.classList.add('hidden-error'); }}
                       />
                     ) : (
                       <video
-                        className="asset-video"
+                        className={`asset-video ${!asset.thumbnail_url ? 'always-visible' : ''}`}
                         src={getDirectMediaUrl(asset.video_preview_url)}
                         muted
                         loop
@@ -619,7 +627,8 @@ function App() {
                           e.currentTarget.pause()
                           e.currentTarget.currentTime = 0
                         }}
-                        style={{ zIndex: 1 }}
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 2 }}
+                        onError={(e) => { e.currentTarget.classList.add('hidden-error'); }}
                       />
                     )
                   )}
@@ -748,6 +757,10 @@ function App() {
                     ) : (
                       <video src={getDirectMediaUrl(selectedAssetDetail.video_preview_url)} controls muted autoPlay style={{ width: '100%', maxHeight: '40vh' }} />
                     )}
+                  </div>
+                ) : selectedAssetDetail.thumbnail_url ? (
+                  <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img src={getDirectMediaUrl(selectedAssetDetail.thumbnail_url)} alt="Thumbnail" style={{ width: '100%', maxHeight: '40vh', objectFit: 'contain' }} />
                   </div>
                 ) : (
                   <div style={{ width: '100%', height: '200px', backgroundColor: '#1e2128', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

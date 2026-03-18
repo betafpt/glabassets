@@ -159,31 +159,47 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
 
             // 1. Upload Asset File or Use External Link
             let assetUrl = initialData?.file_url;
+            const originallyHadExternalAsset = initialData?.file_url?.startsWith('http') && !initialData?.file_url?.includes('supabase.co');
 
-            if (downloadMethod === 'link' && externalLink) {
-                assetUrl = externalLink;
+            if (downloadMethod === 'link') {
+                if (externalLink) {
+                    if (initialData?.file_url && initialData.file_url.includes('supabase.co')) await deleteStorageFile(initialData.file_url, 'assets');
+                    assetUrl = externalLink;
+                } else if (!externalLink && originallyHadExternalAsset) {
+                    assetUrl = null;
+                }
             } else if (downloadMethod === 'auto' && assetFile) {
                 if (initialData?.file_url && initialData.file_url.includes('supabase.co')) await deleteStorageFile(initialData.file_url, 'assets');
                 assetUrl = await uploadFile(assetFile, 'assets')
             }
 
             // 2. Upload Thumbnail (Optional) with compression
-            let thumbnailUrl: string | null = initialData?.thumbnail_url || null
-            if (thumbnailLink) {
-                thumbnailUrl = thumbnailLink
-            } else if (thumbnailFile) {
+            let thumbnailUrl: string | null = initialData?.thumbnail_url || null;
+            const originallyHadExternalThumbnail = initialData?.thumbnail_url?.startsWith('http') && !initialData?.thumbnail_url?.includes('supabase.co');
+
+            if (thumbnailFile) {
                 if (initialData?.thumbnail_url && initialData.thumbnail_url.includes('supabase.co')) await deleteStorageFile(initialData.thumbnail_url, 'thumbnails');
                 const compressedFile = await compressImage(thumbnailFile, 500);
-                thumbnailUrl = await uploadFile(compressedFile, 'thumbnails')
+                thumbnailUrl = await uploadFile(compressedFile, 'thumbnails');
+            } else if (thumbnailLink) {
+                if (initialData?.thumbnail_url && initialData.thumbnail_url.includes('supabase.co')) await deleteStorageFile(initialData.thumbnail_url, 'thumbnails');
+                thumbnailUrl = thumbnailLink;
+            } else if (originallyHadExternalThumbnail && !thumbnailLink) {
+                thumbnailUrl = null;
             }
 
             // 3. Upload Video Preview (Optional)
-            let videoUrl: string | null = initialData?.video_preview_url || null
-            if (previewVideoLink) {
-                videoUrl = previewVideoLink
-            } else if (videoFile) {
+            let videoUrl: string | null = initialData?.video_preview_url || null;
+            const originallyHadExternalVideo = initialData?.video_preview_url?.startsWith('http') && !initialData?.video_preview_url?.includes('supabase.co');
+
+            if (videoFile) {
                 if (initialData?.video_preview_url && initialData.video_preview_url.includes('supabase.co')) await deleteStorageFile(initialData.video_preview_url, 'previews');
-                videoUrl = await uploadFile(videoFile, 'previews')
+                videoUrl = await uploadFile(videoFile, 'previews');
+            } else if (previewVideoLink) {
+                if (initialData?.video_preview_url && initialData.video_preview_url.includes('supabase.co')) await deleteStorageFile(initialData.video_preview_url, 'previews');
+                videoUrl = previewVideoLink;
+            } else if (originallyHadExternalVideo && !previewVideoLink) {
+                videoUrl = null;
             }
 
             // 4. Insert or Update into Database
@@ -202,8 +218,12 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
 
             let dbError: any = null;
             if (initialData) {
-                const { error } = await supabase.from('assets').update(payload).eq('id', initialData.id);
-                dbError = error;
+                const { error, data } = await supabase.from('assets').update(payload).eq('id', initialData.id).select();
+                if (!error && (!data || data.length === 0)) {
+                    dbError = new Error("Cập nhật thất bại: Không tìm thấy tài nguyên hoặc bạn không có quyền.");
+                } else {
+                    dbError = error;
+                }
             } else {
                 const { error } = await supabase.from('assets').insert([payload]);
                 dbError = error;
@@ -214,7 +234,7 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
             onSuccess()
         } catch (err: any) {
             console.error('Upload Error:', err)
-            setError(err.message || 'Failed to upload asset')
+            setError(err.message || 'Failed to upload/update asset')
         } finally {
             setIsUploading(false)
         }
@@ -254,6 +274,7 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
                                 <option value="transitions">Transitions</option>
                                 <option value="titles">Titles & Text</option>
                                 <option value="effects">Effects</option>
+                                <option value="overlays">Overlays</option>
                                 <option value="luts">LUTs</option>
                                 <option value="powergrades">PowerGrades</option>
                                 <option value="lr_presets">Lightroom Presets</option>
@@ -339,8 +360,10 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
                             <input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
-                                disabled={!!thumbnailLink}
+                                onChange={(e) => {
+                                    setThumbnailFile(e.target.files?.[0] || null);
+                                    if (e.target.files?.[0]) setThumbnailLink('');
+                                }}
                             />
                         </div>
 
@@ -357,8 +380,10 @@ export function AdminUploadModal({ onClose, onSuccess, initialData }: AdminUploa
                             <input
                                 type="file"
                                 accept="video/mp4, image/gif"
-                                onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-                                disabled={!!previewVideoLink}
+                                onChange={(e) => {
+                                    setVideoFile(e.target.files?.[0] || null);
+                                    if (e.target.files?.[0]) setPreviewVideoLink('');
+                                }}
                             />
                         </div>
                     </div>
